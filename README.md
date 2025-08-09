@@ -1,1 +1,0 @@
-# BDPriceGear-Frontend
