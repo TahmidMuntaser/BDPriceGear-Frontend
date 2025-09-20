@@ -43,7 +43,22 @@ export default function SearchForm({searchTerm, setSearchTerm, onSearch, loading
                                 )}
                             </button>
                     </div>
-                                    
+
+                    {/* Quick suggestions */}
+                    <div className="mt-6 flex flex-wrap justify-center gap-2">
+                        <span className="text-sm text-gray-400 mr-2">Popular:</span>
+                        {['laptop', 'phone', 'headphones', 'mouse', 'keyboard'].map((suggestion) => (
+                        <button
+                            key={suggestion}
+                            onClick={() => setSearchTerm(suggestion)}
+                            className="px-3 py-1 text-sm bg-gray-800/50 border border-gray-700/50 text-gray-300 rounded-full hover:bg-gray-700/50 hover:text-white transition-all duration-200 capitalize"
+                            type="button"
+                        >
+                            {suggestion}
+                        </button>
+                        ))}
+                    </div>
+                                                
                 </div>
                 
             </form>
