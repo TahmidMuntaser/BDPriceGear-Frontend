@@ -10,6 +10,7 @@ export function useProductSearch() {
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [productsPerPage] = useState(20);
+  const [responseTime, setResponseTime] = useState(null);
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) {
@@ -21,6 +22,8 @@ export function useProductSearch() {
     setLoading(true);
     setError(null);
     setResults([]);
+    
+    const startTime = performance.now();
 
     try {
       // console.log('Calling priceComparisonAPI.searchProducts...');
@@ -66,6 +69,9 @@ export function useProductSearch() {
       // console.error(' Search failed:', err);
       setError(err.message || 'Failed to fetch price data. Please try again.');
     } finally {
+      const endTime = performance.now();
+      const timeTaken = (endTime - startTime) / 1000; // Convert ms to seconds
+      setResponseTime(timeTaken);
       setLoading(false);
     }
   };
@@ -105,6 +111,9 @@ export function useProductSearch() {
     setSearchTerm,
     setCurrentPage,
     handleSearch,
-    clearError
+    clearError,
+    
+    // Response metrics
+    responseTime
   };
 }

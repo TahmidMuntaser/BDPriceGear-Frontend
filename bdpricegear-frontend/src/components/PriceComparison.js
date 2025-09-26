@@ -16,6 +16,7 @@ export default function PriceComparison() {
     totalPages,
     productsPerPage,
     results,
+    responseTime,
     setSearchTerm,
     setCurrentPage,
     handleSearch,
@@ -117,15 +118,28 @@ export default function PriceComparison() {
               <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">
                 Results for "{searchTerm}"
               </h2>
-              <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-xl border border-blue-500/20 rounded-full px-6 py-3">
-                <span className="text-white font-semibold">
-                  {totalProducts} products
-                </span>
-                <span className="text-gray-400">from</span>
-                <span className="text-white font-semibold">
-                  {results.length} store{results.length !== 1 ? 's' : ''}
-                </span>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-2">
+                <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-xl border border-blue-500/20 rounded-full px-6 py-3">
+                  <span className="text-white font-semibold">
+                    {totalProducts} products
+                  </span>
+                  <span className="text-gray-400">from</span>
+                  <span className="text-white font-semibold">
+                    {results.length} store{results.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                
+                {/* Response Time Indicator */}
+                {responseTime && (
+                  <div className="inline-flex items-center space-x-2 bg-green-600/20 backdrop-blur-xl border border-green-500/20 rounded-full px-6 py-3">
+                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                    <span className="text-green-300 font-medium text-sm">
+                      Response time: {responseTime.toFixed(2)}s
+                    </span>
+                  </div>
+                )}
               </div>
+
             </div>
 
             {/* Pagination */}
@@ -163,6 +177,15 @@ export default function PriceComparison() {
             <p className="text-gray-400 max-w-md mx-auto">
               Try searching for a different product or check your spelling.
             </p>
+
+            {responseTime && (
+              <div className="mt-4 inline-flex items-center space-x-2 bg-green-600/20 backdrop-blur-xl border border-green-500/20 rounded-full px-6 py-3">
+                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                <span className="text-green-300 font-medium text-sm">
+                  Response time: {responseTime.toFixed(2)}s
+                </span>
+              </div>
+            )}
           </div>
         )}
 
