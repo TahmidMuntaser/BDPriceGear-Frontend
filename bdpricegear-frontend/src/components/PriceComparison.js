@@ -63,6 +63,7 @@ export default function PriceComparison() {
           setSearchTerm={setSearchTerm}
           onSearch={handleSearch}
           loading={loading}
+          redirectToResults={true}
         />
 
         {/*Error msg */}

@@ -1,10 +1,18 @@
 'use client';
 
-export default function SearchForm({searchTerm, setSearchTerm, onSearch, loading}) {
+import { useRouter } from 'next/navigation';
+
+export default function SearchForm({searchTerm, setSearchTerm, onSearch, loading, redirectToResults = false}) {
+    const router = useRouter();
     
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSearch();
+        if (redirectToResults && searchTerm.trim()) {
+            // Navigate to search results page
+            router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+        } else {
+            onSearch();
+        }
     };
 
     return (

@@ -1,11 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import { useProductSearch } from '../../hooks/useProductSearch';
+import NavbarSearch from '../NavbarSearch';
 
 export default function Navbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Use the same search hook as PriceComparison
+  const { searchTerm, setSearchTerm, handleSearch, loading } = useProductSearch();
   
   // Mock data for badges
   const [cartCount] = useState(0);
@@ -89,28 +93,13 @@ export default function Navbar() {
 
           {/* Search Bar - Hidden on small mobile, shown on tablet and up */}
           <div className="hidden md:flex flex-1 max-w-2xl mx-8">
-            <div className="relative w-full group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl blur opacity-20 group-hover:opacity-40 group-focus-within:opacity-60 transition duration-300"></div>
-              <div className="relative flex items-center w-full bg-[#1A1F2E] rounded-xl border border-gray-700/50 group-focus-within:border-blue-500/50 transition-all duration-200">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <svg className="w-5 h-5 text-gray-400 group-focus-within:text-blue-400 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search for products..."
-                  className="w-full bg-transparent text-white pl-12 pr-16 py-4 rounded-xl border-none outline-none placeholder-gray-400 text-sm font-medium"
-                />
-                <button className="absolute inset-y-0 right-0 flex items-center pr-3">
-                  <div className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-4 py-2 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
-                    <span className="text-white text-sm font-medium">Search</span>
-                  </div>
-                </button>
-              </div>
-            </div>
+            <NavbarSearch 
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              onSearch={handleSearch}
+              loading={loading}
+              className="w-full"
+            />
           </div>
 
           {/* Right Section */}
@@ -183,28 +172,13 @@ export default function Navbar() {
       {/* Mobile Search Section - Only visible on small screens */}
       <div className="md:hidden bg-[#151922] border-t border-gray-700/30">
         <div className="px-4 py-4">
-          <div className="relative w-full group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl blur opacity-20 group-hover:opacity-40 group-focus-within:opacity-60 transition duration-300"></div>
-            <div className="relative flex items-center w-full bg-[#1A1F2E] rounded-xl border border-gray-700/50 group-focus-within:border-blue-500/50 transition-all duration-200">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <svg className="w-5 h-5 text-gray-400 group-focus-within:text-blue-400 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search for products..."
-                className="w-full bg-transparent text-white pl-12 pr-20 py-4 rounded-xl border-none outline-none placeholder-gray-400 text-sm font-medium"
-              />
-              <button className="absolute inset-y-0 right-0 flex items-center pr-3">
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-4 py-2 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
-                  <span className="text-white text-sm font-medium">Search</span>
-                </div>
-              </button>
-            </div>
-          </div>
+          <NavbarSearch 
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            onSearch={handleSearch}
+            loading={loading}
+            className="w-full"
+          />
         </div>
       </div>
 
