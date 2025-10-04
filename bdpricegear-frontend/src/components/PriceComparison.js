@@ -24,7 +24,7 @@ export default function PriceComparison() {
   } = useProductSearch();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black pt-8">
       
       {/* Geometric Background Pattern */}
       <div className="absolute inset-0 opacity-5">
