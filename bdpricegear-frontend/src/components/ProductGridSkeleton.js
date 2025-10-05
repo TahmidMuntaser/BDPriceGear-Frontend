@@ -1,4 +1,4 @@
-'use client';
+'0use client';
 
 export default function ProductGridSkeleton({ count = 6 }) {
   return (

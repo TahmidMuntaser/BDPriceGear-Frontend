@@ -11,6 +11,7 @@ function SearchResults() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
+  const [isMounted, setIsMounted] = useState(false);
   
   const [sortBy, setSortBy] = useState('relevance');
   const [minPrice, setMinPrice] = useState('');
@@ -33,6 +34,10 @@ function SearchResults() {
     loading, 
     error 
   } = useProductSearch();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     if (query && query !== searchTerm) {
@@ -206,12 +211,12 @@ function SearchResults() {
               <h1 className="text-5xl font-bold text-white mb-2">
                 Search Results
               </h1>
-              {query && (
-                <p className="text-gray-400">
+              {isMounted && query && (
+                <p className="text-gray-400 pb-4">
                   Showing results for: <span className="text-white font-medium">"{query}"</span>
                 </p>
               )}
-              {responseTime && !loading && (
+              {isMounted && responseTime && !loading && (
                 <div className="flex justify-center mt-2">
                   <div className="relative group">
                     <div className="absolute -inset-0.5 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
@@ -245,7 +250,7 @@ function SearchResults() {
                 
                 <ProductGrid products={currentProducts} />
               </div>
-            ) : !loading && query ? (
+            ) : !loading && isMounted && query ? (
               <div className="text-center py-12">
                 <div className="text-gray-400 mb-4">
                   <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

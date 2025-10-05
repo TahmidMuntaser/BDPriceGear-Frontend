@@ -7,7 +7,8 @@ export default function Pagination({
   totalProducts,
   productsPerPage 
 }) {
-  if (totalPages <= 1) {
+  // Always show pagination, even for single page
+  if (totalPages < 1) {
     return null;
   }
 

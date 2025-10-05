@@ -33,7 +33,6 @@ export default function SearchForm({searchTerm, setSearchTerm, onSearch, loading
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     placeholder="Search for products..."
                                     className="w-full pl-12 pr-4 py-4 bg-gray-800/50 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
-                                    disabled={loading}
                                 />
                             </div>
                             <button
