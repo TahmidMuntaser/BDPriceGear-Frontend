@@ -9,7 +9,7 @@ export function useProductSearch() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [productsPerPage] = useState(20);
+  const [productsPerPage] = useState(12);
   const [responseTime, setResponseTime] = useState(null);
 
   const handleSearch = async () => {
