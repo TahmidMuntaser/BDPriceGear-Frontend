@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useShopDetail } from '@/hooks/useShops';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function ShopDetailPage() {
   const params = useParams();
@@ -93,9 +94,11 @@ export default function ShopDetailPage() {
               {/* Shop Logo */}
               <div className="flex-shrink-0">
                 {shop.logo_url ? (
-                  <img
+                  <Image
                     src={shop.logo_url}
                     alt={shop.name}
+                    width={200}
+                    height={128}
                     className="h-32 w-auto object-contain"
                     onError={(e) => {
                       e.target.style.display = 'none';
@@ -165,9 +168,11 @@ export default function ShopDetailPage() {
                       <div className="relative">
                         {product.image_url && (
                           <div className="mb-4 overflow-hidden rounded-xl">
-                            <img
+                            <Image
                               src={product.image_url}
                               alt={product.name}
+                              width={400}
+                              height={300}
                               className="w-full h-48 object-cover transform transition-transform duration-500 group-hover/card:scale-110"
                               onError={(e) => {
                                 e.target.style.display = 'none';

@@ -104,7 +104,7 @@ export default function PriceComparison() {
               <div className="absolute inset-0 w-16 h-16 border-4 border-gray-800 rounded-full animate-ping opacity-20"></div>
             </div>
             <h3 className="text-2xl font-semibold text-white mb-2">
-              Searching for "{searchTerm}"
+              Searching for &quot;{searchTerm}&quot;
             </h3>
             <p className="text-gray-400">
               Finding the best deals across multiple stores...
@@ -117,7 +117,7 @@ export default function PriceComparison() {
           <div className="space-y-8">
             <div className="text-center">
               <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">
-                Results for "{searchTerm}"
+                Results for &quot;{searchTerm}&quot;
               </h2>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-2">
                 <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-xl border border-blue-500/20 rounded-full px-6 py-3">
@@ -203,7 +203,7 @@ export default function PriceComparison() {
               Ready to find amazing deals?
             </h3>
             <p className="text-gray-300 text-xl max-w-2xl mx-auto leading-relaxed">
-              Search for any product and compare prices across Bangladesh's top e-commerce stores
+              Search for any product and compare prices across Bangladesh&apos;s top e-commerce stores
             </p>
           </div>
         )}

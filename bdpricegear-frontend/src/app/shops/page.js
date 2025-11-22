@@ -2,6 +2,7 @@
 
 import { useShops } from '@/hooks/useShops';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function ShopsPage() {
   const { shops, loading, error, clearError } = useShops();
@@ -95,9 +96,11 @@ export default function ShopsPage() {
                       {/* Shop Logo */}
                       <div className="mb-4 flex items-center justify-center h-24">
                         {shop.logo_url ? (
-                          <img
+                          <Image
                             src={shop.logo_url}
                             alt={shop.name}
+                            width={200}
+                            height={96}
                             className="max-h-full max-w-full object-contain"
                             onError={(e) => {
                               e.target.style.display = 'none';

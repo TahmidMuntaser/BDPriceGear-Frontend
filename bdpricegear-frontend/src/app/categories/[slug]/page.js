@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useCategoryDetail } from '@/hooks/useCategories';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function CategoryDetailPage() {
   const params = useParams();
@@ -116,9 +117,11 @@ export default function CategoryDetailPage() {
                     <div className="relative">
                       {product.image_url && (
                         <div className="mb-4 overflow-hidden rounded-xl">
-                          <img
+                          <Image
                             src={product.image_url}
                             alt={product.name}
+                            width={400}
+                            height={300}
                             className="w-full h-48 object-cover transform transition-transform duration-500 group-hover/card:scale-110"
                             onError={(e) => {
                               e.target.style.display = 'none';

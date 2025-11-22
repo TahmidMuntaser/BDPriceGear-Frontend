@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 
 export default function ProductGrid({ products, showModal = false }) {
@@ -53,9 +54,11 @@ export default function ProductGrid({ products, showModal = false }) {
           
           {productImage && (
             <div className="mb-3 md:mb-4 overflow-hidden rounded-xl">
-              <img
+              <Image
                 src={productImage}
                 alt={productName}
+                width={400}
+                height={300}
                 className="w-full h-32 sm:h-40 md:h-48 object-cover transform transition-transform duration-500 group-hover/card:scale-110"
                 onError={(e) => {
                   e.target.style.display = 'none';
@@ -155,9 +158,11 @@ export default function ProductGrid({ products, showModal = false }) {
                 {/* Image */}
                 <div className="relative">
                   {(selectedProduct.image_url || selectedProduct.img) && (
-                    <img
+                    <Image
                       src={selectedProduct.image_url || selectedProduct.img}
                       alt={selectedProduct.name}
+                      width={600}
+                      height={600}
                       className="w-full h-auto rounded-2xl"
                       onError={(e) => {
                         e.target.src = '/placeholder-product.png';

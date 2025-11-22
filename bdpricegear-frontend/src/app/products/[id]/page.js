@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { catalogAPI } from '@/services/api';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -119,9 +120,11 @@ export default function ProductDetailPage() {
               <div className="relative">
                 {product.image_url ? (
                   <div className="rounded-2xl overflow-hidden bg-gray-800/50 p-8">
-                    <img
+                    <Image
                       src={product.image_url}
                       alt={product.name}
+                      width={600}
+                      height={600}
                       className="w-full h-auto object-contain"
                       onError={(e) => {
                         e.target.src = '/images/placeholder.png';
@@ -180,7 +183,7 @@ export default function ProductDetailPage() {
                       className="inline-flex items-center space-x-2 bg-gray-800/70 px-4 py-2.5 rounded-lg hover:bg-gray-800 transition-colors border border-gray-700/50"
                     >
                       {product.shop_logo && (
-                        <img src={product.shop_logo} alt={product.shop_name} className="h-5" onError={(e) => e.target.style.display = 'none'} />
+                        <Image src={product.shop_logo} alt={product.shop_name} width={80} height={20} className="h-5 w-auto" onError={(e) => e.target.style.display = 'none'} />
                       )}
                       <span className="text-blue-400 text-sm font-medium">{product.shop_name}</span>
                     </Link>

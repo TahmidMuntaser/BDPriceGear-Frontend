@@ -49,6 +49,7 @@ function SearchResults() {
     if (searchTerm) {
       handleSearch();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
 
   const handleSortChange = (value) => {
@@ -213,7 +214,7 @@ function SearchResults() {
               </h1>
               {isMounted && query && (
                 <p className="text-gray-400 pb-4">
-                  Showing results for: <span className="text-white font-medium">"{query}"</span>
+                  Showing results for: <span className="text-white font-medium">&quot;{query}&quot;</span>
                 </p>
               )}
               {isMounted && responseTime && !loading && (
@@ -259,7 +260,7 @@ function SearchResults() {
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-2">No Results Found</h3>
                 <p className="text-gray-400 mb-6">
-                  We couldn't find any products matching "{query}". Try adjusting your search terms or filters.
+                  We couldn&apos;t find any products matching &quot;{query}&quot;. Try adjusting your search terms or filters.
                 </p>
                 <div className="space-y-2">
                   <p className="text-gray-500 text-sm">Suggestions:</p>
