@@ -238,6 +238,131 @@ export const priceComparisonAPI = {
   },
 };
 
+// Product Catalog APIs
+export const catalogAPI = {
+  // Get all products with pagination and filters
+  getProducts: async (page = 1, pageSize = 50, filters = {}) => {
+    let url = `${API_ENDPOINTS.PRODUCTS}?page=${page}&page_size=${pageSize}`;
+    
+    // Add filter parameters - only if they have actual values
+    if (filters.category && filters.category.trim() !== '') {
+      url += `&category=${encodeURIComponent(filters.category)}`;
+    }
+    if (filters.shop && filters.shop.trim() !== '') {
+      url += `&shop=${encodeURIComponent(filters.shop)}`;
+    }
+    
+    console.log('🔍 API Request URL:', url);
+    console.log('📦 Filters received:', JSON.stringify(filters));
+    
+    const makeRequest = async () => {
+      const response = await apiClient.get(url);
+      console.log('✅ API Response:', {
+        count: response.data.count,
+        resultsLength: response.data.results?.length,
+        hasNext: !!response.data.next,
+        hasPrevious: !!response.data.previous
+      });
+      return response.data;
+    };
+    
+    try {
+      return await retryWithBackoff(makeRequest, 2, 1500);
+    } catch (error) {
+      throw new Error(`Failed to fetch products: ${error.message}`);
+    }
+  },
+
+  // Get single product by ID
+  getProductById: async (id) => {
+    const url = API_ENDPOINTS.PRODUCT_DETAIL(id);
+    
+    const makeRequest = async () => {
+      const response = await apiClient.get(url);
+      return response.data;
+    };
+    
+    try {
+      return await retryWithBackoff(makeRequest, 2, 1500);
+    } catch (error) {
+      if (error.response?.status === 404) {
+        throw new Error('Product not found');
+      }
+      throw new Error(`Failed to fetch product details: ${error.message}`);
+    }
+  },
+
+  // Get all categories
+  getCategories: async () => {
+    const url = API_ENDPOINTS.CATEGORIES;
+    
+    const makeRequest = async () => {
+      const response = await apiClient.get(url);
+      return response.data;
+    };
+    
+    try {
+      return await retryWithBackoff(makeRequest, 2, 1500);
+    } catch (error) {
+      throw new Error(`Failed to fetch categories: ${error.message}`);
+    }
+  },
+
+  // Get single category by slug with products
+  getCategoryById: async (slug) => {
+    const url = API_ENDPOINTS.CATEGORY_DETAIL(slug);
+    
+    const makeRequest = async () => {
+      const response = await apiClient.get(url);
+      return response.data;
+    };
+    
+    try {
+      return await retryWithBackoff(makeRequest, 2, 1500);
+    } catch (error) {
+      if (error.response?.status === 404) {
+        throw new Error('Category not found');
+      }
+      throw new Error(`Failed to fetch category details: ${error.message}`);
+    }
+  },
+
+  // Get all shops
+  getShops: async () => {
+    const url = API_ENDPOINTS.SHOPS;
+    
+    const makeRequest = async () => {
+      const response = await apiClient.get(url);
+      return response.data;
+    };
+    
+    try {
+      return await retryWithBackoff(makeRequest, 2, 1500);
+    } catch (error) {
+      throw new Error(`Failed to fetch shops: ${error.message}`);
+    }
+  },
+
+  // Get single shop by slug with details
+  getShopById: async (slug) => {
+    const url = API_ENDPOINTS.SHOP_DETAIL(slug);
+    
+    const makeRequest = async () => {
+      const response = await apiClient.get(url);
+      return response.data;
+    };
+    
+    try {
+      return await retryWithBackoff(makeRequest, 2, 1500);
+    } catch (error) {
+      if (error.response?.status === 404) {
+        throw new Error('Shop not found');
+      }
+      throw new Error(`Failed to fetch shop details: ${error.message}`);
+    }
+  },
+};
+
 // Export the configured API client for other uses if needed
 export { apiClient };
 

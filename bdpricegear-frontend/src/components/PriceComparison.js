@@ -153,7 +153,7 @@ export default function PriceComparison() {
             />
 
             {/* Product Grid */}
-            <ProductGrid products={currentProducts} />
+            <ProductGrid products={currentProducts} showModal={true} />
 
             {/* Pagination (Bottom) */}
             <Pagination 

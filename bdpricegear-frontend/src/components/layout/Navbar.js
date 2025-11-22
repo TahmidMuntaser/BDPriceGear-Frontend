@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useProductSearch } from '../../hooks/useProductSearch';
 import NavbarSearch from '../NavbarSearch';
+import Link from 'next/link';
 
 export default function Navbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -30,16 +31,14 @@ export default function Navbar() {
   ];
 
   const navLinks = [
-    'Laptop',
-    'Desktop', 
-    'Components',
-    'Accessories',
-    'Smartphone',
-    'Monitor',
-    'Gaming',
-    'Audio',
-    'Storage',
-    'Networking'
+    { name: 'Products', href: '/products' },
+    { name: 'Categories', href: '/categories' },
+    { name: 'Shops', href: '/shops' },
+    { name: 'Laptop', href: '/categories/laptop' },
+    { name: 'Desktop', href: '/categories/desktop' }, 
+    { name: 'Components', href: '/categories/components' },
+    { name: 'Accessories', href: '/categories/accessories' },
+    { name: 'Smartphone', href: '/categories/smartphone' },
   ];
 
   return (
@@ -50,44 +49,19 @@ export default function Navbar() {
           
           {/* Logo Section */}
           <div className="flex items-center space-x-4 lg:space-x-8">
-            <div className="text-white text-xl lg:text-2xl font-mono tracking-wider">
+            <Link href="/" className="text-white text-xl lg:text-2xl font-mono tracking-wider hover:opacity-80 transition-opacity">
               <span className="font-extrabold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">BDPRICE</span>
               <span className="font-light text-gray-300">GEAR</span>
-            </div>
+            </Link>
             
             {/* Category Dropdown - Hidden on mobile */}
             <div className="relative hidden md:block">
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              <Link
+                href="/categories"
                 className="bg-[#1E222B] text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-[#252A35] transition-colors duration-200"
               >
-                <span>All Category</span>
-                <svg 
-                  className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
-                  fill="currentColor" 
-                  viewBox="0 0 20 20"
-                >
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-              
-              {/* Dropdown Menu */}
-              {isDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 bg-[#1E222B] rounded-lg shadow-xl min-w-[200px] py-2 z-50">
-                  {categories.map((category, index) => (
-                    <button
-                      key={index}
-                      className="w-full text-left px-4 py-2 text-gray-300 hover:text-white hover:bg-[#252A35] transition-colors duration-150"
-                      onClick={() => {
-                        setIsDropdownOpen(false);
-                        // Handle category selection
-                      }}
-                    >
-                      {category}
-                    </button>
-                  ))}
-                </div>
-              )}
+                <span>All Categories</span>
+              </Link>
             </div>
           </div>
 
@@ -186,49 +160,26 @@ export default function Navbar() {
       {isMobileMenuOpen && (
         <div className="lg:hidden bg-[#151922] border-t border-gray-700/30">
           <div className="px-4 py-4 space-y-4">
-            {/* Mobile Category Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full bg-[#1E222B] text-white px-4 py-3 rounded-lg flex items-center justify-between hover:bg-[#252A35] transition-colors duration-200"
-              >
-                <span>All Category</span>
-                <svg 
-                  className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
-                  fill="currentColor" 
-                  viewBox="0 0 20 20"
-                >
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-              
-              {isDropdownOpen && (
-                <div className="mt-2 bg-[#1E222B] rounded-lg shadow-xl py-2">
-                  {categories.map((category, index) => (
-                    <button
-                      key={index}
-                      className="w-full text-left px-4 py-2 text-gray-300 hover:text-white hover:bg-[#252A35] transition-colors duration-150"
-                      onClick={() => {
-                        setIsDropdownOpen(false);
-                        // Handle category selection
-                      }}
-                    >
-                      {category}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            {/* Mobile Category Link */}
+            <Link
+              href="/categories"
+              className="w-full bg-[#1E222B] text-white px-4 py-3 rounded-lg flex items-center justify-between hover:bg-[#252A35] transition-colors duration-200"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <span>All Categories</span>
+            </Link>
 
             {/* Mobile Navigation Links */}
             <div className="grid grid-cols-2 gap-2">
               {navLinks.map((link, index) => (
-                <button
+                <Link
                   key={index}
+                  href={link.href}
                   className="text-gray-300 hover:text-white text-sm font-medium py-2 px-3 rounded hover:bg-[#1E222B] transition-colors duration-200"
+                  onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  {link}
-                </button>
+                  {link.name}
+                </Link>
               ))}
             </div>
 
@@ -248,12 +199,13 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-6 py-3">
           <div className="flex items-center space-x-8 overflow-x-auto">
             {navLinks.map((link, index) => (
-              <button
+              <Link
                 key={index}
+                href={link.href}
                 className="text-gray-300 hover:text-white hover:underline underline-offset-4 whitespace-nowrap text-sm font-medium transition-colors duration-200"
               >
-                {link}
-              </button>
+                {link.name}
+              </Link>
             ))}
           </div>
         </div>

@@ -118,10 +118,10 @@ function SearchResults() {
 
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Filters Sidebar */}
-          <div className="lg:w-1/4">
+          <div className="lg:w-1/4 lg:sticky lg:top-32 lg:self-start">
             <div className="relative">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl blur opacity-10"></div>
-              <div className="relative bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-4 lg:p-6 lg:sticky lg:top-8 overflow-hidden">
+              <div className="relative bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-4 lg:p-6 overflow-hidden">
                 <h3 className="text-lg font-semibold text-white mb-4">Filters</h3>
                 
                 {/* Category Filter */}
@@ -248,7 +248,7 @@ function SearchResults() {
                   />
                 </div>
                 
-                <ProductGrid products={currentProducts} />
+                <ProductGrid products={currentProducts} showModal={true} />
               </div>
             ) : !loading && isMounted && query ? (
               <div className="text-center py-12">

@@ -4,8 +4,23 @@ export const API_CONFIG = {
     // false -> call backend API directly
 };
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 export const API_ENDPOINTS = {
+    // Real-time price comparison
     PRICE_COMPARISON: API_CONFIG.USE_PROXY 
-    ? '/api/price-comparison'
-    : `${process.env.NEXT_PUBLIC_API_BASE_URL}/price-comparison/`,
+        ? '/api/price-comparison'
+        : `${BASE_URL}/price-comparison/`,
+    
+    // Product Catalog endpoints
+    PRODUCTS: `${BASE_URL}/products/`,
+    PRODUCT_DETAIL: (id) => `${BASE_URL}/products/${id}/`,
+    
+    // Categories endpoints
+    CATEGORIES: `${BASE_URL}/categories/`,
+    CATEGORY_DETAIL: (slug) => `${BASE_URL}/categories/${slug}/`,
+    
+    // Shops endpoints
+    SHOPS: `${BASE_URL}/shops/`,
+    SHOP_DETAIL: (slug) => `${BASE_URL}/shops/${slug}/`,
 };
