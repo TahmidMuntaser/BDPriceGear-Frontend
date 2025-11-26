@@ -49,8 +49,8 @@ export default function Navbar() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-0 flex-shrink-0 group">
               <div className="font-bold text-2xl tracking-widest leading-none">
-                <span className="text-blue-500">BD</span>
-                <span className="text-white">PriceGear</span>
+                <span className="text-blue-500">BDPRICE</span>
+                <span className="text-white">GEAR</span>
               </div>
             </Link>
 
