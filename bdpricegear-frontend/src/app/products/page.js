@@ -137,6 +137,10 @@ export default function ProductsPage() {
 
   // Apply all filters and sorting on the frontend
   const getFilteredAndSortedProducts = () => {
+    if (!allProducts || allProducts.length === 0) {
+      return [];
+    }
+    
     let filtered = [...allProducts];
 
     // Filter by category
@@ -174,25 +178,44 @@ export default function ProductsPage() {
     // Filter by price range
     if (priceRange.min !== '' || priceRange.max !== '') {
       filtered = filtered.filter(product => {
-        const price = product.current_price || 0;
+        const price = parseFloat(product.current_price) || 0;
         const min = priceRange.min !== '' ? parseFloat(priceRange.min) : 0;
         const max = priceRange.max !== '' ? parseFloat(priceRange.max) : Infinity;
+        
+        // Skip if price is invalid
+        if (isNaN(price)) return false;
+        
         return price >= min && price <= max;
       });
     }
 
     // Filter by availability
-    if (availability === 'in-stock') {
-      filtered = filtered.filter(product => product.is_available === true);
-    } else if (availability === 'out-of-stock') {
-      filtered = filtered.filter(product => product.is_available === false);
+    if (availability !== 'all') {
+      filtered = filtered.filter(product => {
+        const isAvailable = product.is_available === true || product.is_available === 'true' || product.is_available === 1;
+        
+        if (availability === 'in-stock') {
+          return isAvailable;
+        } else if (availability === 'out-of-stock') {
+          return !isAvailable;
+        }
+        return true;
+      });
     }
 
     // Sort by price
     if (sortOrder === 'low-to-high') {
-      filtered.sort((a, b) => (a.current_price || 0) - (b.current_price || 0));
+      filtered.sort((a, b) => {
+        const priceA = parseFloat(a.current_price) || 0;
+        const priceB = parseFloat(b.current_price) || 0;
+        return priceA - priceB;
+      });
     } else if (sortOrder === 'high-to-low') {
-      filtered.sort((a, b) => (b.current_price || 0) - (a.current_price || 0));
+      filtered.sort((a, b) => {
+        const priceA = parseFloat(a.current_price) || 0;
+        const priceB = parseFloat(b.current_price) || 0;
+        return priceB - priceA;
+      });
     }
 
     return filtered;
@@ -654,12 +677,12 @@ export default function ProductsPage() {
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-2">No Products Found</h3>
                 <p className="text-gray-400 mb-6">
-                  {(selectedCategory || selectedShop) 
+                  {(selectedCategory || selectedShops.length > 0 || priceRange.min || priceRange.max || availability !== 'all' || sortOrder) 
                     ? "No products match your filters. Try adjusting your selection."
                     : "No products available at the moment."
                   }
                 </p>
-                {(selectedCategory || selectedShop) && (
+                {(selectedCategory || selectedShops.length > 0 || priceRange.min || priceRange.max || availability !== 'all' || sortOrder) && (
                   <button
                     onClick={handleClearFilters}
                     className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
