@@ -1,44 +1,199 @@
 'use client';
 
-import { useState } from 'react';
-import { useProducts } from '@/hooks/useProducts';
+import { useState, useEffect } from 'react';
 import { useCategories } from '@/hooks/useCategories';
 import { useShops } from '@/hooks/useShops';
 import ProductGridSkeleton from '@/components/ProductGridSkeleton';
 import ProductGrid from '@/components/ProductGrid';
 import Pagination from '@/components/Pagination';
 import Link from 'next/link';
+import { SlidersHorizontal, X } from 'lucide-react';
+
 
 export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedShop, setSelectedShop] = useState('');
-
-  const filters = {
-    category: selectedCategory,
-    shop: selectedShop,
-  };
-
-  const {
-    products,
-    loading,
-    error,
-    currentPage,
-    totalPages,
-    totalCount,
-    hasNext,
-    hasPrevious,
-    nextPage,
-    previousPage,
-    goToPage,
-    clearError,
-  } = useProducts(1, 21, filters);
+  const [selectedShops, setSelectedShops] = useState([]);
+  const [priceRange, setPriceRange] = useState({ min: '', max: '' });
+  const [availability, setAvailability] = useState('all');
+  const [sortOrder, setSortOrder] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const productsPerPage = 15;
+  const [allProducts, setAllProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const { categories } = useCategories();
   const { shops } = useShops();
 
+  // Fetch ALL products once on component mount
+  useEffect(() => {
+    const fetchAllProducts = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const fetchedProducts = [];
+        let page = 1;
+        let hasMore = true;
+        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://bdpricegear-backend.onrender.com/api';
+        
+        console.log('🔄 Starting to fetch all products...');
+        
+        while (hasMore) {
+          const url = `${baseUrl}/products/?page=${page}&page_size=100`;
+          console.log(`Fetching page ${page}...`);
+          
+          const response = await fetch(url);
+          
+          if (!response.ok) {
+            if (response.status === 404) {
+              console.log(`Page ${page} not found, stopping...`);
+              hasMore = false;
+              break;
+            }
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          
+          if (data.results && data.results.length > 0) {
+            fetchedProducts.push(...data.results);
+            console.log(`✅ Fetched page ${page}: ${data.results.length} products (Total: ${fetchedProducts.length})`);
+            hasMore = !!data.next;
+            page++;
+          } else {
+            hasMore = false;
+          }
+          
+          // Safety limit to prevent infinite loops
+          if (page > 200) {
+            console.warn('⚠️ Reached page limit of 200');
+            hasMore = false;
+          }
+        }
+        
+        console.log(`✅ Finished! Total products loaded: ${fetchedProducts.length}`);
+        setAllProducts(fetchedProducts);
+      } catch (err) {
+        console.error('❌ Error fetching all products:', err);
+        setError(err.message || 'Failed to fetch products');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchAllProducts();
+  }, []);
+
+  // Apply all filters and sorting on the frontend
+  const getFilteredAndSortedProducts = () => {
+    let filtered = [...allProducts];
+
+    // Filter by category
+    if (selectedCategory) {
+      const selectedCategoryObj = categories.find(c => c.slug === selectedCategory);
+      filtered = filtered.filter(product => {
+        const categorySlug = product.category?.slug || product.category_slug;
+        const categoryName = product.category?.name || product.category_name || product.category;
+        const categoryId = product.category?.id || product.category_id || product.category;
+        
+        return categorySlug === selectedCategory || 
+               categoryName === selectedCategoryObj?.name ||
+               categoryId === selectedCategoryObj?.id ||
+               String(product.category) === String(selectedCategoryObj?.id);
+      });
+    }
+
+    // Filter by shop (multiple selection)
+    if (selectedShops.length > 0) {
+      filtered = filtered.filter(product => {
+        return selectedShops.some(shopSlug => {
+          const selectedShopObj = shops.find(s => s.slug === shopSlug);
+          const productShopSlug = product.shop?.slug || product.shop_slug;
+          const productShopName = product.shop?.name || product.shop_name || product.storeName;
+          const productShopId = product.shop?.id || product.shop_id || product.shop;
+          
+          return productShopSlug === shopSlug || 
+                 productShopName === selectedShopObj?.name ||
+                 productShopId === selectedShopObj?.id ||
+                 String(product.shop) === String(selectedShopObj?.id);
+        });
+      });
+    }
+
+    // Filter by price range
+    if (priceRange.min !== '' || priceRange.max !== '') {
+      filtered = filtered.filter(product => {
+        const price = product.current_price || 0;
+        const min = priceRange.min !== '' ? parseFloat(priceRange.min) : 0;
+        const max = priceRange.max !== '' ? parseFloat(priceRange.max) : Infinity;
+        return price >= min && price <= max;
+      });
+    }
+
+    // Filter by availability
+    if (availability === 'in-stock') {
+      filtered = filtered.filter(product => product.is_available === true);
+    } else if (availability === 'out-of-stock') {
+      filtered = filtered.filter(product => product.is_available === false);
+    }
+
+    // Sort by price
+    if (sortOrder === 'low-to-high') {
+      filtered.sort((a, b) => (a.current_price || 0) - (b.current_price || 0));
+    } else if (sortOrder === 'high-to-low') {
+      filtered.sort((a, b) => (b.current_price || 0) - (a.current_price || 0));
+    }
+
+    return filtered;
+  };
+
+  const allFilteredProducts = getFilteredAndSortedProducts();
+  
+  // Calculate pagination from filtered products
+  const totalCount = allFilteredProducts.length;
+  const totalPages = Math.ceil(totalCount / productsPerPage);
+  const startIndex = (currentPage - 1) * productsPerPage;
+  const endIndex = startIndex + productsPerPage;
+  const products = allFilteredProducts.slice(startIndex, endIndex);
+
+  const hasNext = currentPage < totalPages;
+  const hasPrevious = currentPage > 1;
+
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const nextPage = () => {
+    if (hasNext) {
+      setCurrentPage(prev => prev + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const previousPage = () => {
+    if (hasPrevious) {
+      setCurrentPage(prev => prev - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, selectedShops.length, priceRange.min, priceRange.max, availability, sortOrder]);
+
+  const clearError = () => setError(null);
+
   const handleClearFilters = () => {
     setSelectedCategory('');
-    setSelectedShop('');
+    setSelectedShops([]);
+    setPriceRange({ min: '', max: '' });
+    setAvailability('all');
+    setSortOrder('');
   };
 
   return (
@@ -67,90 +222,248 @@ export default function ProductsPage() {
 
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Filters Sidebar */}
-          <div className="lg:w-1/4 lg:sticky lg:top-32 lg:self-start">
-            <div className="relative">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl blur opacity-10"></div>
-              <div className="relative bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-4 lg:p-6 overflow-hidden">
-                <h3 className="text-lg font-semibold text-white mb-4">Filters</h3>
-                
-                {/* Category Filter */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Category
-                  </label>
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full bg-gray-700/80 backdrop-blur border border-gray-600/50 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-blue-500 focus:bg-gray-700 transition-all"
-                  >
-                    <option value="">All Categories</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.slug}>
-                        {category.name} ({category.product_count})
-                      </option>
-                    ))}
-                  </select>
+          <div className="lg:w-1/4">
+            <div className="bg-gray-800 border border-gray-700 rounded-lg p-5">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="w-5 h-5 text-blue-500" />
+                  <h3 className="text-lg font-bold text-white">Filters</h3>
                 </div>
-
-                {/* Shop Filter */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Shop
-                  </label>
-                  <select
-                    value={selectedShop}
-                    onChange={(e) => setSelectedShop(e.target.value)}
-                    className="w-full bg-gray-700/80 backdrop-blur border border-gray-600/50 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-blue-500 focus:bg-gray-700 transition-all"
-                  >
-                    <option value="">All Shops</option>
-                    {shops.map((shop) => (
-                      <option key={shop.id} value={shop.slug}>
-                        {shop.name} ({shop.product_count})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Clear Filters */}
                 <button
                   onClick={handleClearFilters}
-                  disabled={!selectedCategory && !selectedShop}
-                  className="w-full bg-gray-700/80 text-gray-300 py-2.5 rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium"
+                  className="text-xs text-gray-400 hover:text-white transition-colors"
                 >
-                  Clear All Filters
+                  Clear All
                 </button>
-
-                {/* Active Filters */}
-                {(selectedCategory || selectedShop) && (
-                  <div className="mt-4 pt-4 border-t border-gray-700">
-                    <p className="text-xs text-gray-400 mb-2">Active Filters:</p>
-                    <div className="space-y-2">
-                      {selectedCategory && (
-                        <div className="flex items-center justify-between bg-blue-600/20 text-blue-300 px-3 py-1.5 rounded-lg text-xs">
-                          <span className="truncate">📁 {categories.find(c => c.slug === selectedCategory)?.name}</span>
-                          <button
-                            onClick={() => setSelectedCategory('')}
-                            className="ml-2 hover:text-blue-100 transition-colors font-bold"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      )}
-                      {selectedShop && (
-                        <div className="flex items-center justify-between bg-purple-600/20 text-purple-300 px-3 py-1.5 rounded-lg text-xs">
-                          <span className="truncate">🏪 {shops.find(s => s.slug === selectedShop)?.name}</span>
-                          <button
-                            onClick={() => setSelectedShop('')}
-                            className="ml-2 hover:text-purple-100 transition-colors font-bold"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
+              
+              {/* Sort Order */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-300 mb-3">
+                  Sort By Price
+                </label>
+                <div className="space-y-2">
+                  <label className="flex items-center p-3 bg-gray-700/50 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors">
+                    <input
+                      type="radio"
+                      name="sort"
+                      value=""
+                      checked={sortOrder === ''}
+                      onChange={(e) => setSortOrder(e.target.value)}
+                      className="w-4 h-4 text-blue-500 bg-gray-600 border-gray-500"
+                    />
+                    <span className="ml-3 text-sm text-gray-300">Default</span>
+                  </label>
+                  <label className="flex items-center p-3 bg-gray-700/50 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors">
+                    <input
+                      type="radio"
+                      name="sort"
+                      value="low-to-high"
+                      checked={sortOrder === 'low-to-high'}
+                      onChange={(e) => setSortOrder(e.target.value)}
+                      className="w-4 h-4 text-blue-500 bg-gray-600 border-gray-500"
+                    />
+                    <span className="ml-3 text-sm text-gray-300">Price: Low to High</span>
+                  </label>
+                  <label className="flex items-center p-3 bg-gray-700/50 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors">
+                    <input
+                      type="radio"
+                      name="sort"
+                      value="high-to-low"
+                      checked={sortOrder === 'high-to-low'}
+                      onChange={(e) => setSortOrder(e.target.value)}
+                      className="w-4 h-4 text-blue-500 bg-gray-600 border-gray-500"
+                    />
+                    <span className="ml-3 text-sm text-gray-300">Price: High to Low</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Price Range */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-300 mb-3">
+                  Price Range
+                </label>
+                <div className="space-y-3">
+                  <div>
+                    <input
+                      type="number"
+                      placeholder="Min Price"
+                      value={priceRange.min}
+                      onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="number"
+                      placeholder="Max Price"
+                      value={priceRange.max}
+                      onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Availability */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-300 mb-3">
+                  Availability
+                </label>
+                <div className="space-y-2">
+                  <label className="flex items-center p-3 bg-gray-700/50 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors">
+                    <input
+                      type="radio"
+                      name="availability"
+                      value="all"
+                      checked={availability === 'all'}
+                      onChange={(e) => setAvailability(e.target.value)}
+                      className="w-4 h-4 text-blue-500 bg-gray-600 border-gray-500"
+                    />
+                    <span className="ml-3 text-sm text-gray-300">All Products</span>
+                  </label>
+                  <label className="flex items-center p-3 bg-gray-700/50 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors">
+                    <input
+                      type="radio"
+                      name="availability"
+                      value="in-stock"
+                      checked={availability === 'in-stock'}
+                      onChange={(e) => setAvailability(e.target.value)}
+                      className="w-4 h-4 text-blue-500 bg-gray-600 border-gray-500"
+                    />
+                    <span className="ml-3 text-sm text-gray-300">In Stock</span>
+                  </label>
+                  <label className="flex items-center p-3 bg-gray-700/50 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors">
+                    <input
+                      type="radio"
+                      name="availability"
+                      value="out-of-stock"
+                      checked={availability === 'out-of-stock'}
+                      onChange={(e) => setAvailability(e.target.value)}
+                      className="w-4 h-4 text-blue-500 bg-gray-600 border-gray-500"
+                    />
+                    <span className="ml-3 text-sm text-gray-300">Out of Stock</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Category Filter */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-300 mb-3">
+                  Category
+                </label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                >
+                  <option value="">All Categories</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.slug}>
+                      {category.name} ({category.product_count})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Shop Filter */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-300 mb-3">
+                  Shop {selectedShops.length > 0 && `(${selectedShops.length} selected)`}
+                </label>
+                <div className="space-y-2">
+                  {shops.map((shop) => (
+                    <label 
+                      key={shop.id} 
+                      className="flex items-center p-3 bg-gray-700/50 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        value={shop.slug}
+                        checked={selectedShops.includes(shop.slug)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedShops([...selectedShops, shop.slug]);
+                          } else {
+                            setSelectedShops(selectedShops.filter(s => s !== shop.slug));
+                          }
+                        }}
+                        className="w-4 h-4 text-blue-500 bg-gray-600 border-gray-500 rounded focus:ring-blue-500 focus:ring-2"
+                      />
+                      <span className="ml-3 text-sm text-gray-300 flex-1">
+                        {shop.name}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        ({shop.product_count})
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Active Filters Summary */}
+              {(selectedCategory || selectedShops.length > 0 || priceRange.min || priceRange.max || availability !== 'all' || sortOrder) && (
+                <div className="pt-6 border-t border-gray-700">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-medium text-gray-400">Active Filters</p>
+                    <button
+                      onClick={handleClearFilters}
+                      className="text-xs text-blue-500 hover:text-blue-400"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {sortOrder && (
+                      <div className="flex items-center justify-between bg-gray-700/50 px-3 py-2 rounded text-xs text-gray-300">
+                        <span>Sort: {sortOrder === 'low-to-high' ? 'Low to High' : 'High to Low'}</span>
+                        <button onClick={() => setSortOrder('')} className="text-gray-400 hover:text-white">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                    {(priceRange.min || priceRange.max) && (
+                      <div className="flex items-center justify-between bg-gray-700/50 px-3 py-2 rounded text-xs text-gray-300">
+                        <span>₹{priceRange.min || '0'} - ₹{priceRange.max || '∞'}</span>
+                        <button onClick={() => setPriceRange({ min: '', max: '' })} className="text-gray-400 hover:text-white">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                    {availability !== 'all' && (
+                      <div className="flex items-center justify-between bg-gray-700/50 px-3 py-2 rounded text-xs text-gray-300">
+                        <span>{availability === 'in-stock' ? 'In Stock' : 'Out of Stock'}</span>
+                        <button onClick={() => setAvailability('all')} className="text-gray-400 hover:text-white">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                    {selectedCategory && (
+                      <div className="flex items-center justify-between bg-gray-700/50 px-3 py-2 rounded text-xs text-gray-300">
+                        <span>{categories.find(c => c.slug === selectedCategory)?.name}</span>
+                        <button onClick={() => setSelectedCategory('')} className="text-gray-400 hover:text-white">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                    {selectedShops.map(shopSlug => {
+                      const shop = shops.find(s => s.slug === shopSlug);
+                      return shop ? (
+                        <div key={shopSlug} className="flex items-center justify-between bg-gray-700/50 px-3 py-2 rounded text-xs text-gray-300">
+                          <span>{shop.name}</span>
+                          <button 
+                            onClick={() => setSelectedShops(selectedShops.filter(s => s !== shopSlug))} 
+                            className="text-gray-400 hover:text-white"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -206,33 +519,37 @@ export default function ProductsPage() {
             {!loading && !error && products.length > 0 && (
               <div>
                 {/* Top Pagination */}
-                <div className="mb-8">
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={goToPage}
-                    totalProducts={totalCount}
-                    productsPerPage={21}
-                    hasNext={hasNext}
-                    hasPrevious={hasPrevious}
-                  />
-                </div>
+                {totalPages > 0 && (
+                  <div className="mb-8">
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={goToPage}
+                      totalProducts={totalCount}
+                      productsPerPage={productsPerPage}
+                      hasNext={hasNext}
+                      hasPrevious={hasPrevious}
+                    />
+                  </div>
+                )}
 
                 {/* Products Grid */}
                 <ProductGrid products={products} />
 
                 {/* Bottom Pagination */}
-                <div className="mt-8">
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={goToPage}
-                    totalProducts={totalCount}
-                    productsPerPage={21}
-                    hasNext={hasNext}
-                    hasPrevious={hasPrevious}
-                  />
-                </div>
+                {totalPages > 0 && (
+                  <div className="mt-8">
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={goToPage}
+                      totalProducts={totalCount}
+                      productsPerPage={productsPerPage}
+                      hasNext={hasNext}
+                      hasPrevious={hasPrevious}
+                    />
+                  </div>
+                )}
               </div>
             )}
 

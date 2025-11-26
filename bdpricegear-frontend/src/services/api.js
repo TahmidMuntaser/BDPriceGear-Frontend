@@ -269,6 +269,16 @@ export const catalogAPI = {
     try {
       return await retryWithBackoff(makeRequest, 2, 1500);
     } catch (error) {
+      // Handle 404 specifically - return empty results instead of throwing
+      if (error.response?.status === 404 || error.message?.includes('404')) {
+        console.log('⚠️ Page not found (404), returning empty results');
+        return {
+          results: [],
+          count: 0,
+          next: null,
+          previous: null
+        };
+      }
       throw new Error(`Failed to fetch products: ${error.message}`);
     }
   },

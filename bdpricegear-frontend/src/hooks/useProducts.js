@@ -80,7 +80,7 @@ export function useProducts(initialPage = 1, initialPageSize = 21, filters = {})
         const data = await catalogAPI.getProducts(page, size, currentFilters);
         
         // Handle paginated response
-        if (data.results) {
+        if (data.results !== undefined) {
           setProducts(data.results);
           setTotalCount(data.count || 0);
           setHasNext(!!data.next);

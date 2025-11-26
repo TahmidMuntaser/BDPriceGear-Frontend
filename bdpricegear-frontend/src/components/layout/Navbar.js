@@ -4,69 +4,133 @@ import { useState } from 'react';
 import { useProductSearch } from '../../hooks/useProductSearch';
 import NavbarSearch from '../NavbarSearch';
 import Link from 'next/link';
+import { 
+  Search, 
+  ShoppingCart, 
+  Heart, 
+  BarChart3, 
+  User, 
+  Menu, 
+  X,
+  ChevronDown
+} from 'lucide-react';
 
 export default function Navbar() {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   
-  // Use the same search hook as PriceComparison
   const { searchTerm, setSearchTerm, handleSearch, loading } = useProductSearch();
   
-  // Mock data for badges
   const [cartCount] = useState(0);
   const [wishlistCount] = useState(0);
-  const [compareCount] = useState(0);
+  const [compareCount] = useState(2);
 
   const categories = [
-    'All Category',
-    'Laptop',
-    'Desktop',
-    'Components',
-    'Accessories',
-    'Smartphone',
-    'Monitor',
-    'Gaming',
-    'Audio',
-    'Storage'
-  ];
-
-  const navLinks = [
-    { name: 'Products', href: '/products' },
-    { name: 'Categories', href: '/categories' },
-    { name: 'Shops', href: '/shops' },
+    { name: 'SSD', href: '/categories/ssd' },
+    { name: 'HDD', href: '/categories/hdd' },
+    { name: 'Mouse', href: '/categories/mouse' },
+    { name: 'Keyboard', href: '/categories/keyboard' },
+    { name: 'Monitor', href: '/categories/monitor' },
+    { name: 'RAM', href: '/categories/ram' },
+    { name: 'Webcam', href: '/categories/webcam' },
+    { name: 'Speaker', href: '/categories/speaker' },
+    { name: 'Microphone', href: '/categories/microphone' },
     { name: 'Laptop', href: '/categories/laptop' },
-    { name: 'Desktop', href: '/categories/desktop' }, 
-    { name: 'Components', href: '/categories/components' },
-    { name: 'Accessories', href: '/categories/accessories' },
-    { name: 'Smartphone', href: '/categories/smartphone' },
+    { name: 'Headphone', href: '/categories/headphone' },
   ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-gradient-to-r from-[#0C0F17] to-[#1A1D25] shadow-lg">
+    <nav className="sticky top-0 z-50 bg-gray-900 border-b border-gray-800">
       {/* Main Navbar */}
-      <div className="h-[70px] px-4 lg:px-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between h-full">
-          
-          {/* Logo Section */}
-          <div className="flex items-center space-x-4 lg:space-x-8">
-            <Link href="/" className="text-white text-xl lg:text-2xl font-mono tracking-wider hover:opacity-80 transition-opacity">
-              <span className="font-extrabold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">BDPRICE</span>
-              <span className="font-light text-gray-300">GEAR</span>
-            </Link>
+      <div className="bg-gray-900">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
             
-            {/* Category Dropdown - Hidden on mobile */}
-            <div className="relative hidden md:block">
-              <Link
-                href="/categories"
-                className="bg-[#1E222B] text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-[#252A35] transition-colors duration-200"
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-0 flex-shrink-0 group">
+              <div className="font-bold text-2xl tracking-widest leading-none">
+                <span className="text-blue-500">BD</span>
+                <span className="text-white">PriceGear</span>
+              </div>
+            </Link>
+
+            {/* Desktop Search Bar */}
+            <div className="hidden md:flex flex-1 max-w-2xl mx-8">
+              <NavbarSearch 
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                onSearch={handleSearch}
+                loading={loading}
+                className="w-full"
+              />
+            </div>
+
+            {/* Right Actions */}
+            <div className="flex items-center gap-4">
+              
+              {/* Desktop Icons */}
+              <div className="hidden md:flex items-center gap-4">
+                <Link 
+                  href="/compare" 
+                  className="relative p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <BarChart3 className="w-6 h-6 text-gray-400 hover:text-blue-500" />
+                  {compareCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center">
+                      {compareCount}
+                    </span>
+                  )}
+                </Link>
+
+                <Link 
+                  href="/wishlist" 
+                  className="relative p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <Heart className="w-6 h-6 text-gray-400 hover:text-red-500" />
+                  {wishlistCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center">
+                      {wishlistCount}
+                    </span>
+                  )}
+                </Link>
+
+                <Link 
+                  href="/cart" 
+                  className="relative p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <ShoppingCart className="w-6 h-6 text-gray-400 hover:text-green-500" />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center">
+                      {cartCount}
+                    </span>
+                  )}
+                </Link>
+
+                <Link 
+                  href="/account"
+                  className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <User className="w-6 h-6 text-gray-400 hover:text-gray-200" />
+                </Link>
+              </div>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                aria-label="Menu"
               >
-                <span>All Categories</span>
-              </Link>
+                {isMobileMenuOpen ? (
+                  <X className="w-6 h-6 text-gray-400" />
+                ) : (
+                  <Menu className="w-6 h-6 text-gray-400" />
+                )}
+              </button>
             </div>
           </div>
 
-          {/* Search Bar - Hidden on small mobile, shown on tablet and up */}
-          <div className="hidden md:flex flex-1 max-w-2xl mx-8">
+          {/* Mobile Search Bar */}
+          <div className="md:hidden pb-4">
             <NavbarSearch 
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
@@ -75,151 +139,171 @@ export default function Navbar() {
               className="w-full"
             />
           </div>
-
-          {/* Right Section */}
-          <div className="flex items-center space-x-2 lg:space-x-6">
-            {/* Offers Button - Hidden on small screens */}
-            <button className="hidden sm:flex bg-[#1E222B] hover:bg-[#252A35] text-white px-4 py-2 rounded-lg items-center space-x-2 shadow-md hover:shadow-lg transition-all duration-200">
-              <span className="text-orange-500">🔥</span>
-              <span className="hidden md:inline">Offers</span>
-            </button>
-
-            {/* Action Icons */}
-            <div className="flex items-center space-x-2 lg:space-x-4">
-              {/* Cart */}
-              <button className="relative p-2 text-gray-300 hover:text-white transition-colors duration-200">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6.5M7 13l-4.5-1M20 13v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6" />
-                </svg>
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
-
-              {/* Wishlist */}
-              <button className="relative p-2 text-gray-300 hover:text-white transition-colors duration-200">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-                {wishlistCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {wishlistCount}
-                  </span>
-                )}
-              </button>
-
-              {/* Compare */}
-              <button className="relative p-2 text-gray-300 hover:text-white transition-colors duration-200">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                {compareCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {compareCount}
-                  </span>
-                )}
-              </button>
-
-              {/* Profile - Hidden on mobile */}
-              <button className="hidden sm:block p-2 text-gray-300 hover:text-white transition-colors duration-200">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </button>
-
-              {/* Mobile Menu Button */}
-              <button 
-                className="lg:hidden p-2 text-gray-300 hover:text-white transition-colors duration-200"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
-                </svg>
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* Mobile Search Section - Only visible on small screens */}
-      <div className="md:hidden bg-[#151922] border-t border-gray-700/30">
-        <div className="px-4 py-4">
-          <NavbarSearch 
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            onSearch={handleSearch}
-            loading={loading}
-            className="w-full"
-          />
+      {/* Categories Bar - Desktop */}
+      <div className="hidden md:block bg-gray-800/50">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center gap-1 py-3">
+            {/* Categories Dropdown */}
+            <div className="relative">
+              <button
+                onMouseEnter={() => setIsCategoriesOpen(true)}
+                onMouseLeave={() => setIsCategoriesOpen(false)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors border border-gray-700"
+              >
+                <Menu className="w-4 h-4" />
+                <span className="font-medium">Categories</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${isCategoriesOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Dropdown Menu */}
+              {isCategoriesOpen && (
+                <div
+                  onMouseEnter={() => setIsCategoriesOpen(true)}
+                  onMouseLeave={() => setIsCategoriesOpen(false)}
+                  className="absolute top-full left-0 mt-2 w-60 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl z-50 overflow-hidden"
+                >
+                  {categories.map((category, index) => (
+                    <Link
+                      key={index}
+                      href={category.href}
+                      className="block px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors first:pt-3 last:pb-3"
+                    >
+                      {category.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Quick Links */}
+            <div className="flex items-center gap-1 flex-1 overflow-x-auto">
+              <Link 
+                href="/products" 
+                className="px-4 py-2.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors whitespace-nowrap"
+              >
+                All Products
+              </Link>
+              <Link 
+                href="/shops" 
+                className="px-4 py-2.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors whitespace-nowrap"
+              >
+                Shops
+              </Link>
+              
+              {categories.slice(0, 5).map((category, index) => (
+                <Link
+                  key={index}
+                  href={category.href}
+                  className="px-4 py-2.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors whitespace-nowrap"
+                >
+                  {category.name}
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden bg-[#151922] border-t border-gray-700/30">
-          <div className="px-4 py-4 space-y-4">
-            {/* Mobile Category Link */}
-            <Link
-              href="/categories"
-              className="w-full bg-[#1E222B] text-white px-4 py-3 rounded-lg flex items-center justify-between hover:bg-[#252A35] transition-colors duration-200"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              <span>All Categories</span>
-            </Link>
+        <div className="md:hidden bg-gray-850 border-t border-gray-800">
+          <div className="max-w-7xl mx-auto px-4 py-4">
+            {/* Mobile Icons Row */}
+            <div className="flex items-center justify-around pb-4 mb-4 border-b border-gray-800">
+              <Link 
+                href="/compare" 
+                className="flex flex-col items-center gap-1"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <div className="relative">
+                  <BarChart3 className="w-6 h-6 text-gray-400" />
+                  {compareCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs font-semibold rounded-full w-4 h-4 flex items-center justify-center">
+                      {compareCount}
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs text-gray-400">Compare</span>
+              </Link>
 
-            {/* Mobile Navigation Links */}
-            <div className="grid grid-cols-2 gap-2">
-              {navLinks.map((link, index) => (
-                <Link
-                  key={index}
-                  href={link.href}
-                  className="text-gray-300 hover:text-white text-sm font-medium py-2 px-3 rounded hover:bg-[#1E222B] transition-colors duration-200"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {link.name}
-                </Link>
-              ))}
+              <Link 
+                href="/wishlist" 
+                className="flex flex-col items-center gap-1"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <div className="relative">
+                  <Heart className="w-6 h-6 text-gray-400" />
+                  {wishlistCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-semibold rounded-full w-4 h-4 flex items-center justify-center">
+                      {wishlistCount}
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs text-gray-400">Wishlist</span>
+              </Link>
+
+              <Link 
+                href="/cart" 
+                className="flex flex-col items-center gap-1"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <div className="relative">
+                  <ShoppingCart className="w-6 h-6 text-gray-400" />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs font-semibold rounded-full w-4 h-4 flex items-center justify-center">
+                      {cartCount}
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs text-gray-400">Cart</span>
+              </Link>
+
+              <Link 
+                href="/account" 
+                className="flex flex-col items-center gap-1"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <User className="w-6 h-6 text-gray-400" />
+                <span className="text-xs text-gray-400">Account</span>
+              </Link>
             </div>
 
-            {/* Mobile Profile Button */}
-            <button className="w-full bg-[#1E222B] hover:bg-[#252A35] text-white px-4 py-3 rounded-lg flex items-center space-x-2 transition-colors duration-200">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <span>Profile</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Secondary Navigation - Desktop only */}
-      <div className="hidden lg:block bg-[#151922] border-t border-gray-700/30">
-        <div className="max-w-7xl mx-auto px-6 py-3">
-          <div className="flex items-center space-x-8 overflow-x-auto">
-            {navLinks.map((link, index) => (
+            {/* Navigation Links */}
+            <div className="space-y-1">
               <Link
-                key={index}
-                href={link.href}
-                className="text-gray-300 hover:text-white hover:underline underline-offset-4 whitespace-nowrap text-sm font-medium transition-colors duration-200"
+                href="/products"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
               >
-                {link.name}
+                All Products
               </Link>
-            ))}
+              <Link
+                href="/shops"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                All Shops
+              </Link>
+              
+              <div className="pt-2 mt-2 border-t border-gray-800">
+                <div className="text-xs text-gray-500 px-4 py-2">Categories</div>
+                {categories.map((category, index) => (
+                  <Link
+                    key={index}
+                    href={category.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-4 py-2 text-gray-400 hover:bg-gray-800 hover:text-white rounded-lg transition-colors"
+                  >
+                    {category.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Dropdown backdrop */}
-      {(isDropdownOpen || isMobileMenuOpen) && (
-        <div 
-          className="fixed inset-0 bg-transparent z-40"
-          onClick={() => {
-            setIsDropdownOpen(false);
-            setIsMobileMenuOpen(false);
-          }}
-        />
       )}
     </nav>
   );
