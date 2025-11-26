@@ -64,7 +64,7 @@ export default function ProductDetailPage() {
           <p className="text-gray-400 mb-6">{error}</p>
           <button
             onClick={() => router.push('/products')}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 shadow-lg shadow-emerald-900/50"
           >
             Back to Products
           </button>
@@ -80,7 +80,7 @@ export default function ProductDetailPage() {
           <h2 className="text-2xl font-bold text-white mb-4">Product Not Found</h2>
           <button
             onClick={() => router.push('/products')}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 shadow-lg shadow-emerald-900/50"
           >
             Back to Products
           </button>
@@ -104,7 +104,7 @@ export default function ProductDetailPage() {
       <div className="relative max-w-7xl mx-auto px-4 py-12">
         {/* Breadcrumb */}
         <nav className="mb-8 flex items-center space-x-2 text-sm">
-          <Link href="/products" className="text-blue-400 hover:text-blue-300 transition-colors">
+          <Link href="/products" className="text-emerald-400 hover:text-emerald-300 transition-colors">
             Products
           </Link>
           <span className="text-gray-500">/</span>
@@ -113,7 +113,7 @@ export default function ProductDetailPage() {
 
         {/* Product Detail */}
         <div className="relative group">
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-3xl blur opacity-20"></div>
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-3xl blur opacity-20"></div>
           <div className="relative bg-gray-900/50 backdrop-blur-xl border border-gray-800/50 rounded-3xl p-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               {/* Image Section */}
@@ -149,7 +149,7 @@ export default function ProductDetailPage() {
                     {product.category_name && (
                       <Link 
                         href={`/categories/${product.category_slug}`}
-                        className="inline-block text-xs bg-purple-600/20 text-purple-300 px-2.5 py-1 rounded-md hover:bg-purple-600/30 transition-colors"
+                        className="inline-block text-xs bg-emerald-600/20 text-emerald-300 px-2.5 py-1 rounded-md hover:bg-emerald-600/30 transition-colors"
                       >
                         📁 {product.category_name}
                       </Link>
@@ -185,7 +185,7 @@ export default function ProductDetailPage() {
                       {product.shop_logo && (
                         <Image src={product.shop_logo} alt={product.shop_name} width={80} height={20} className="h-5 w-auto" onError={(e) => e.target.style.display = 'none'} />
                       )}
-                      <span className="text-blue-400 text-sm font-medium">{product.shop_name}</span>
+                      <span className="text-emerald-400 text-sm font-medium">{product.shop_name}</span>
                     </Link>
                   </div>
                 )}
@@ -230,7 +230,7 @@ export default function ProductDetailPage() {
                       href={product.product_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg text-base font-medium hover:from-blue-700 hover:to-purple-700 transition-colors text-center"
+                      className="block w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-3 rounded-lg text-base font-medium hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 text-center shadow-lg shadow-emerald-900/50"
                     >
                       Buy Now on {product.shop_name} →
                     </a>
@@ -240,7 +240,7 @@ export default function ProductDetailPage() {
                 <div className="pt-6">
                   <button
                     onClick={() => router.push('/products')}
-                    className="text-blue-400 hover:text-blue-300 transition-colors flex items-center space-x-2"
+                    className="text-emerald-400 hover:text-emerald-300 transition-colors flex items-center space-x-2"
                   >
                     <span>←</span>
                     <span>Back to Products</span>

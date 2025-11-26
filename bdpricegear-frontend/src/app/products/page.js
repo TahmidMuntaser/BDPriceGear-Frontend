@@ -125,7 +125,7 @@ export default function ProductsPage() {
           console.log('💾 Products cached to browser storage');
         }
       } catch (err) {
-        console.error('❌ Error fetching products:', err);
+        console.error('Error fetching products:', err);
         setError(err.message || 'Failed to fetch products');
         setLoading(false);
         setIsLoadingMore(false);
@@ -291,7 +291,7 @@ export default function ProductsPage() {
         {/* Breadcrumb */}
         <div className="mb-4">
           <nav className="flex items-center space-x-2 text-sm">
-            <Link href="/" className="text-blue-400 hover:text-blue-300 transition-colors">
+            <Link href="/" className="text-emerald-400 hover:text-emerald-300 transition-colors">
               Home
             </Link>
             <span className="text-gray-500">/</span>
@@ -305,7 +305,7 @@ export default function ProductsPage() {
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-5">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
-                  <SlidersHorizontal className="w-5 h-5 text-blue-500" />
+                  <SlidersHorizontal className="w-5 h-5 text-emerald-500" />
                   <h3 className="text-lg font-bold text-white">Filters</h3>
                 </div>
                 <button
@@ -329,7 +329,7 @@ export default function ProductsPage() {
                       value=""
                       checked={sortOrder === ''}
                       onChange={(e) => setSortOrder(e.target.value)}
-                      className="w-4 h-4 text-blue-500 bg-gray-600 border-gray-500"
+                      className="w-4 h-4 text-emerald-500 bg-gray-600 border-gray-500"
                     />
                     <span className="ml-3 text-sm text-gray-300">Default</span>
                   </label>
@@ -340,7 +340,7 @@ export default function ProductsPage() {
                       value="low-to-high"
                       checked={sortOrder === 'low-to-high'}
                       onChange={(e) => setSortOrder(e.target.value)}
-                      className="w-4 h-4 text-blue-500 bg-gray-600 border-gray-500"
+                      className="w-4 h-4 text-emerald-500 bg-gray-600 border-gray-500"
                     />
                     <span className="ml-3 text-sm text-gray-300">Price: Low to High</span>
                   </label>
@@ -351,7 +351,7 @@ export default function ProductsPage() {
                       value="high-to-low"
                       checked={sortOrder === 'high-to-low'}
                       onChange={(e) => setSortOrder(e.target.value)}
-                      className="w-4 h-4 text-blue-500 bg-gray-600 border-gray-500"
+                      className="w-4 h-4 text-emerald-500 bg-gray-600 border-gray-500"
                     />
                     <span className="ml-3 text-sm text-gray-300">Price: High to Low</span>
                   </label>
@@ -370,7 +370,7 @@ export default function ProductsPage() {
                       placeholder="Min Price"
                       value={priceRange.min}
                       onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
-                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500 transition-colors"
                     />
                   </div>
                   <div>
@@ -379,7 +379,7 @@ export default function ProductsPage() {
                       placeholder="Max Price"
                       value={priceRange.max}
                       onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
-                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500 transition-colors"
                     />
                   </div>
                 </div>
@@ -398,7 +398,7 @@ export default function ProductsPage() {
                       value="all"
                       checked={availability === 'all'}
                       onChange={(e) => setAvailability(e.target.value)}
-                      className="w-4 h-4 text-blue-500 bg-gray-600 border-gray-500"
+                      className="w-4 h-4 text-emerald-500 bg-gray-600 border-gray-500"
                     />
                     <span className="ml-3 text-sm text-gray-300">All Products</span>
                   </label>
@@ -409,7 +409,7 @@ export default function ProductsPage() {
                       value="in-stock"
                       checked={availability === 'in-stock'}
                       onChange={(e) => setAvailability(e.target.value)}
-                      className="w-4 h-4 text-blue-500 bg-gray-600 border-gray-500"
+                      className="w-4 h-4 text-emerald-500 bg-gray-600 border-gray-500"
                     />
                     <span className="ml-3 text-sm text-gray-300">In Stock</span>
                   </label>
@@ -420,7 +420,7 @@ export default function ProductsPage() {
                       value="out-of-stock"
                       checked={availability === 'out-of-stock'}
                       onChange={(e) => setAvailability(e.target.value)}
-                      className="w-4 h-4 text-blue-500 bg-gray-600 border-gray-500"
+                      className="w-4 h-4 text-emerald-500 bg-gray-600 border-gray-500"
                     />
                     <span className="ml-3 text-sm text-gray-300">Out of Stock</span>
                   </label>
@@ -435,7 +435,7 @@ export default function ProductsPage() {
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-emerald-500 transition-colors"
                 >
                   <option value="">All Categories</option>
                   {categories.map((category) => (
@@ -468,7 +468,7 @@ export default function ProductsPage() {
                             setSelectedShops(selectedShops.filter(s => s !== shop.slug));
                           }
                         }}
-                        className="w-4 h-4 text-blue-500 bg-gray-600 border-gray-500 rounded focus:ring-blue-500 focus:ring-2"
+                        className="w-4 h-4 text-emerald-500 bg-gray-600 border-gray-500 rounded focus:ring-emerald-500 focus:ring-2"
                       />
                       <span className="ml-3 text-sm text-gray-300 flex-1">
                         {shop.name}
@@ -488,7 +488,7 @@ export default function ProductsPage() {
                     <p className="text-xs font-medium text-gray-400">Active Filters</p>
                     <button
                       onClick={handleClearFilters}
-                      className="text-xs text-blue-500 hover:text-blue-400"
+                      className="text-xs text-emerald-500 hover:text-emerald-400"
                     >
                       Clear
                     </button>
@@ -599,9 +599,9 @@ export default function ProductsPage() {
               <div>
                 {/* Loading More Indicator */}
                 {isLoadingMore && (
-                  <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                  <div className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
                     <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 text-blue-400">
+                      <div className="flex items-center gap-2 text-emerald-400">
                         <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -685,7 +685,7 @@ export default function ProductsPage() {
                 {(selectedCategory || selectedShops.length > 0 || priceRange.min || priceRange.max || availability !== 'all' || sortOrder) && (
                   <button
                     onClick={handleClearFilters}
-                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+                    className="px-6 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-lg text-sm font-medium transition-all duration-200 shadow-lg shadow-emerald-900/50"
                   >
                     Clear Filters
                   </button>
