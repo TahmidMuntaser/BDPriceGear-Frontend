@@ -192,14 +192,16 @@ export default function ProductsPage() {
     // Filter by availability
     if (availability !== 'all') {
       filtered = filtered.filter(product => {
+        const price = parseFloat(product.current_price) || 0;
         const isAvailable = product.is_available === true || product.is_available === 'true' || product.is_available === 1;
-        
+
         if (availability === 'in-stock') {
-          return isAvailable;
+          return isAvailable && price > 0; // Ensure product is available and has a valid price
         } else if (availability === 'out-of-stock') {
-          return !isAvailable;
+          return !isAvailable || price === 0; // Include unavailable products or those with price 0
         }
-        return true;
+
+        return true; // Default case (should not occur)
       });
     }
 
