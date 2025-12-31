@@ -40,98 +40,65 @@ export default function ProductsPage() {
         // Check if we have cached data
         const cachedData = localStorage.getItem(CACHE_KEY);
         const cachedTimestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
-        
-        if (cachedData && cachedTimestamp) {
-          const age = Date.now() - parseInt(cachedTimestamp);
-          if (age < CACHE_DURATION) {
-            console.log('✅ Loading products from cache');
-            const products = JSON.parse(cachedData);
-            setAllProducts(products);
-            setLoading(false);
-            return;
-          } else {
-            console.log('⏰ Cache expired, fetching fresh data');
-          }
-        }
-        
+        // Only cache first 4 and 5 pages, not all products
         const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://bdpricegear-backend.onrender.com/api';
-        
-        console.log('🔄 Fetching first page...');
-        
+        console.log('Fetching first page...');
         // Fetch first page immediately
         const firstResponse = await fetch(`${baseUrl}/products/?page=1&page_size=100`);
         if (!firstResponse.ok) {
           throw new Error(`HTTP error! status: ${firstResponse.status}`);
         }
-        
         const firstData = await firstResponse.json();
-        console.log(`✅ First page loaded: ${firstData.results.length} products`);
+        console.log(`First page loaded: ${firstData.results.length} products`);
         setAllProducts(firstData.results);
         setLoading(false); // Show products immediately
-        
         // Continue fetching remaining pages in background
         if (firstData.next) {
           setIsLoadingMore(true);
           const fetchedProducts = [...firstData.results];
           let page = 2;
           let hasMore = !!firstData.next;
-          
-          console.log('🔄 Loading remaining products in background...');
-          
-          while (hasMore) {
-            const url = `${baseUrl}/products/?page=${page}&page_size=100`;
-            
-            const response = await fetch(url);
-            
-            if (!response.ok) {
-              if (response.status === 404) {
-                console.log(`Page ${page} not found, stopping...`);
-                hasMore = false;
-                break;
+          console.log('Loading remaining products in background...');
+          try {
+            while (hasMore) {
+              const url = `${baseUrl}/products/?page=${page}&page_size=100`;
+              const response = await fetch(url);
+              if (!response.ok) {
+                if (response.status === 404) {
+                  console.log(`Page ${page} not found, stopping...`);
+                  hasMore = false;
+                  break;
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
               }
-              throw new Error(`HTTP error! status: ${response.status}`);
+              const data = await response.json();
+              if (data.results && data.results.length > 0) {
+                fetchedProducts.push(...data.results);
+                // Cache pages 1 to 5
+                if (page >= 1 && page <= 5) {
+                  localStorage.setItem(`${CACHE_KEY}_page${page}`, JSON.stringify(data.results));
+                  localStorage.setItem(`${CACHE_TIMESTAMP_KEY}_page${page}`, Date.now().toString());
+                  console.log(`Page ${page} cached to browser storage`);
+                }
+                setAllProducts([...fetchedProducts]); // Update products as we fetch
+                console.log(`Fetched page ${page}: ${data.results.length} products (Total: ${fetchedProducts.length})`);
+                hasMore = !!data.next;
+                page++;
+              } else {
+                hasMore = false;
+              }
+              // No safety limit: fetch all pages
             }
-            
-            const data = await response.json();
-            
-            if (data.results && data.results.length > 0) {
-              fetchedProducts.push(...data.results);
-              setAllProducts([...fetchedProducts]); // Update products as we fetch
-              console.log(`✅ Fetched page ${page}: ${data.results.length} products (Total: ${fetchedProducts.length})`);
-              hasMore = !!data.next;
-              page++;
-            } else {
-              hasMore = false;
-            }
-            
-            // Safety limit
-            if (page > 200) {
-              console.warn('⚠️ Reached page limit of 200');
-              hasMore = false;
-            }
+          } finally {
+            setIsLoadingMore(false);
           }
-          
-          console.log(`✅ All products loaded: ${fetchedProducts.length}`);
-          setIsLoadingMore(false);
-          
-          // Cache the complete product list
-          localStorage.setItem(CACHE_KEY, JSON.stringify(fetchedProducts));
-          localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
-          console.log('💾 Products cached to browser storage');
-        } else {
-          // Cache even if there's only one page
-          localStorage.setItem(CACHE_KEY, JSON.stringify(firstData.results));
-          localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
-          console.log('💾 Products cached to browser storage');
         }
       } catch (err) {
         console.error('Error fetching products:', err);
         setError(err.message || 'Failed to fetch products');
         setLoading(false);
-        setIsLoadingMore(false);
       }
-    };
-    
+    }
     fetchAllProducts();
   }, []);
 
@@ -608,7 +575,7 @@ export default function ProductsPage() {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <span>Loading more products in background... ({allProducts.length} loaded)</span>
+                        <span>Loading more products in background ({allProducts.length} loaded)</span>
                       </div>
                     </div>
                   </div>
