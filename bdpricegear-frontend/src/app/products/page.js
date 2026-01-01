@@ -55,28 +55,82 @@ export default function ProductsPage() {
       
       try {
         const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://bdpricegear-backend.onrender.com/api';
-        const response = await fetch(`${baseUrl}/products/?product=${encodeURIComponent(searchQuery)}`);
         
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        // Fetch first page
+        const firstResponse = await fetch(`${baseUrl}/products/?product=${encodeURIComponent(searchQuery)}&page=1`);
+        
+        if (!firstResponse.ok) {
+          throw new Error(`HTTP error! status: ${firstResponse.status}`);
         }
         
-        const data = await response.json();
+        const firstData = await firstResponse.json();
         
-        // Handle different response formats
+        // Handle different response formats for first page
         let productsData = [];
-        if (Array.isArray(data)) {
-          productsData = data;
-        } else if (data?.results && Array.isArray(data.results)) {
-          productsData = data.results;
-        } else if (data?.products && Array.isArray(data.products)) {
-          productsData = data.products;
+        if (Array.isArray(firstData)) {
+          productsData = firstData;
+        } else if (firstData?.results && Array.isArray(firstData.results)) {
+          productsData = firstData.results;
+        } else if (firstData?.products && Array.isArray(firstData.products)) {
+          productsData = firstData.products;
         }
         
         // Only update if not cancelled
         if (!isCancelled) {
           setAllProducts(productsData);
           setLoading(false);
+        }
+        
+        // Continue fetching remaining pages in background if there's more data
+        if (firstData.next && !isCancelled) {
+          setIsLoadingMore(true);
+          const fetchedProducts = [...productsData];
+          let page = 2;
+          let hasMore = !!firstData.next;
+          
+          try {
+            while (hasMore && !isCancelled) {
+              const url = `${baseUrl}/products/?product=${encodeURIComponent(searchQuery)}&page=${page}`;
+              const response = await fetch(url);
+              
+              if (!response.ok) {
+                if (response.status === 404) {
+                  hasMore = false;
+                  break;
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              
+              const data = await response.json();
+              let pageProducts = [];
+              
+              if (Array.isArray(data)) {
+                pageProducts = data;
+              } else if (data?.results && Array.isArray(data.results)) {
+                pageProducts = data.results;
+              } else if (data?.products && Array.isArray(data.products)) {
+                pageProducts = data.products;
+              }
+              
+              if (pageProducts.length > 0) {
+                fetchedProducts.push(...pageProducts);
+                
+                // Only update if not cancelled
+                if (!isCancelled) {
+                  setAllProducts([...fetchedProducts]);
+                }
+                
+                hasMore = !!data.next;
+                page++;
+              } else {
+                hasMore = false;
+              }
+            }
+          } finally {
+            if (!isCancelled) {
+              setIsLoadingMore(false);
+            }
+          }
         }
       } catch (err) {
         if (!isCancelled) {
@@ -709,7 +763,7 @@ export default function ProductsPage() {
                 )}
 
                 {/* Products Grid */}
-                <ProductGrid products={products} />
+                <ProductGrid products={products} showModal={true} />
 
                 {/* Bottom Pagination */}
                 {totalPages > 0 && (

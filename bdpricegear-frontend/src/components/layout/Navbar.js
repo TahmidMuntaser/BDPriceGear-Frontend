@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
 import NavbarSearch from '../NavbarSearch';
 import Link from 'next/link';
 import { 
@@ -18,6 +19,16 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  
+  // Clear search term when navigating away from products page or when search query is cleared
+  useEffect(() => {
+    const query = searchParams.get('q');
+    if (pathname !== '/products' || !query) {
+      setSearchTerm('');
+    }
+  }, [pathname, searchParams]);
   
   const [cartCount] = useState(0);
   const [wishlistCount] = useState(0);
