@@ -602,8 +602,12 @@ export default function ProductsPage() {
           <div className="lg:w-3/4">
             {/* Page Header */}
             <div className="mb-6 text-center">
-              <h1 className="text-5xl font-bold text-white mb-2">
-                {searchQuery ? `Search Results for "${searchQuery}"` : 'Product Catalog'}
+              <h1 className="text-xl md:text-2xl font-bold text-white mb-2">
+                {searchQuery ? (
+                  <>
+                    Search Results for <span className="text-base md:text-lg text-emerald-400">"{searchQuery}"</span>
+                  </>
+                ) : 'Product Catalog'}
               </h1>
               {!loading && totalCount > 0 && (
                 <p className="text-gray-400 pb-4">
