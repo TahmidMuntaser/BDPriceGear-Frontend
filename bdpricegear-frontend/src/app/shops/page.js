@@ -18,50 +18,49 @@ export default function ShopsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black pt-4">
       {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
+      <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 20% 50%, #3b82f6 1px, transparent 1px),
-                           radial-gradient(circle at 80% 20%, #8b5cf6 1px, transparent 1px),
-                           radial-gradient(circle at 40% 80%, #06b6d4 1px, transparent 1px)`,
+          backgroundImage: 'linear-gradient(rgba(16, 185, 129, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(16, 185, 129, 0.1) 1px, transparent 1px)',
           backgroundSize: '50px 50px'
         }}></div>
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 py-12">
+      <div className="relative max-w-7xl mx-auto px-4 py-8 sm:py-12">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-black bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent mb-4 tracking-tight">
+        <div className="mb-8 sm:mb-12">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-1 w-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full"></div>
+            <span className="text-xs font-mono text-emerald-400 uppercase tracking-wider">Shopping Directory</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-3">
             Partner Shops
           </h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-gray-400 max-w-2xl">
             Browse products from our trusted retail partners
           </p>
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="max-w-3xl mx-auto mb-8">
-            <div className="relative group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl blur opacity-30"></div>
-              <div className="relative bg-red-900/20 backdrop-blur-xl border border-red-800/30 rounded-xl p-6">
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
-                      <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                      </svg>
-                    </div>
+          <div className="mb-8">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 sm:p-6">
+              <div className="flex items-start gap-3 sm:gap-4">
+                <div className="flex-shrink-0">
+                  <div className="w-10 h-10 bg-red-500/20 border border-red-500/30 rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-red-300 font-semibold mb-2">Error Loading Shops</h3>
-                    <p className="text-red-200/80">{error}</p>
-                    <button
-                      onClick={clearError}
-                      className="mt-3 px-4 py-2 bg-red-600/30 text-red-200 rounded-lg hover:bg-red-600/50 transition-colors text-sm"
-                    >
-                      Dismiss
-                    </button>
-                  </div>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-red-300 font-semibold mb-1">Error Loading Shops</h3>
+                  <p className="text-red-200/80 text-sm">{error}</p>
+                  <button
+                    onClick={clearError}
+                    className="mt-3 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-300 rounded-lg transition-colors text-sm font-medium"
+                  >
+                    Dismiss
+                  </button>
                 </div>
               </div>
             </div>
@@ -70,10 +69,14 @@ export default function ShopsPage() {
 
         {/* Loading State */}
         {loading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {[...Array(8)].map((_, i) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
+            {[...Array(10)].map((_, i) => (
               <div key={i} className="animate-pulse">
-                <div className="bg-gray-800 rounded-2xl h-48"></div>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-6">
+                  <div className="h-20 bg-white/5 rounded-lg mb-4"></div>
+                  <div className="h-4 bg-white/5 rounded mb-2"></div>
+                  <div className="h-3 bg-white/5 rounded w-2/3"></div>
+                </div>
               </div>
             ))}
           </div>
@@ -81,80 +84,69 @@ export default function ShopsPage() {
 
         {/* Shops Grid */}
         {!loading && !error && shops.length > 0 && (
-          <div className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-3xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
-            <div className="relative bg-gray-900/50 backdrop-blur-xl border border-gray-800/50 rounded-3xl p-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {shops.map((shop) => (
-                  <Link
-                    href={`/shops/${shop.slug}`}
-                    key={shop.id}
-                    className="group/card relative bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/30 hover:border-blue-500/30 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl cursor-pointer"
-                  >
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl blur opacity-0 group-hover/card:opacity-20 transition duration-300"></div>
-                    <div className="relative">
-                      {/* Shop Logo */}
-                      <div className="mb-4 flex items-center justify-center h-24">
-                        {shop.logo_url ? (
-                          <Image
-                            src={shop.logo_url}
-                            alt={shop.name}
-                            width={200}
-                            height={96}
-                            className="max-h-full max-w-full object-contain"
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                              e.target.nextElementSibling.style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
-                        <div 
-                          className={`w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-3xl ${shop.logo_url ? 'hidden' : 'flex'}`}
-                        >
-                          🏪
-                        </div>
-                      </div>
-                      
-                      <h3 className="font-semibold text-white mb-2 text-lg text-center group-hover/card:text-blue-300 transition-colors">
-                        {shop.name}
-                      </h3>
-                      
-                      {shop.description && (
-                        <p className="text-gray-400 text-sm line-clamp-2 mb-3 text-center">
-                          {shop.description}
-                        </p>
-                      )}
-                      
-                      {shop.product_count !== undefined && (
-                        <div className="text-center">
-                          <span className="inline-block text-xs bg-blue-600/20 text-blue-300 px-3 py-1 rounded-full">
-                            {shop.product_count} products
-                          </span>
-                        </div>
-                      )}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
+            {shops.map((shop) => (
+              <Link
+                href={`/shops/${shop.slug}`}
+                key={shop.id}
+                className="group relative bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm border border-white/10 hover:border-emerald-500/30 rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.02]"
+              >
+                {/* Hover glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-teal-500/0 group-hover:from-emerald-500/5 group-hover:to-teal-500/5 transition-all duration-300"></div>
+                
+                {/* Corner accent */}
+                <div className="absolute top-0 right-0 w-16 h-16 border-t-2 border-r-2 border-emerald-500/0 group-hover:border-emerald-500/30 rounded-tr-xl transition-all duration-300"></div>
 
-                      {shop.website_url && (
-                        <div className="mt-4 text-center">
-                          <span className="text-xs text-gray-500">
-                            {shop.website_url.replace(/^https?:\/\//, '')}
-                          </span>
-                        </div>
-                      )}
+                <div className="relative p-4 sm:p-6">
+                  {/* Shop Logo */}
+                  <div className="mb-3 sm:mb-4 flex items-center justify-center h-16 sm:h-20">
+                    {shop.logo_url ? (
+                      <Image
+                        src={shop.logo_url}
+                        alt={shop.name}
+                        width={160}
+                        height={80}
+                        className="max-h-full max-w-full object-contain filter grayscale group-hover:grayscale-0 transition-all duration-300"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextElementSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div 
+                      className={`w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 rounded-lg flex items-center justify-center text-2xl sm:text-3xl ${shop.logo_url ? 'hidden' : 'flex'}`}
+                    >
+                      🏪
                     </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
+                  </div>
+                  
+                  <h3 className="font-semibold text-white text-sm sm:text-base mb-2 text-center line-clamp-2 group-hover:text-emerald-300 transition-colors">
+                    {shop.name}
+                  </h3>
+                  
+                  {shop.product_count !== undefined && (
+                    <div className="text-center">
+                      <span className="inline-flex items-center gap-1 text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 px-2 py-1 rounded-md font-mono">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        {shop.product_count}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </Link>
+            ))}
           </div>
         )}
 
         {/* Empty State */}
         {!loading && !error && shops.length === 0 && (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">🏪</span>
+          <div className="text-center py-16 sm:py-20">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl sm:text-4xl">🏪</span>
             </div>
-            <p className="text-gray-400 text-lg">No shops found</p>
+            <p className="text-gray-400 text-base sm:text-lg">No shops found</p>
           </div>
         )}
       </div>
