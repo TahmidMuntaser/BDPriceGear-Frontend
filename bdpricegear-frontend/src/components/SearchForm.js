@@ -7,11 +7,26 @@ export default function SearchForm({searchTerm, setSearchTerm, onSearch, loading
     
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (redirectToResults && searchTerm.trim()) {
-            // Navigate to search results page
+        if (!searchTerm.trim()) return;
+        
+        if (redirectToResults) {
+            // Navigate to search results page (for navbar)
             router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
         } else {
+            // Call the provided onSearch function (for home page)
             onSearch();
+        }
+    };
+
+    const handleSuggestionClick = (suggestion) => {
+        setSearchTerm(suggestion);
+        // Automatically trigger search after setting suggestion
+        if (redirectToResults) {
+            router.push(`/search?q=${encodeURIComponent(suggestion)}`);
+        } else if (onSearch) {
+            // Need to call onSearch with the suggestion directly
+            // since state update is async
+            router.push(`/price-comparison?product=${encodeURIComponent(suggestion)}`);
         }
     };
 
@@ -57,7 +72,7 @@ export default function SearchForm({searchTerm, setSearchTerm, onSearch, loading
                         {['laptop', 'phone', 'headphones', 'mouse', 'keyboard'].map((suggestion) => (
                         <button
                             key={suggestion}
-                            onClick={() => setSearchTerm(suggestion)}
+                            onClick={() => handleSuggestionClick(suggestion)}
                             className="px-3 py-1 text-sm bg-gray-800/50 border border-gray-700/50 text-gray-300 rounded-full hover:bg-gray-700/50 hover:text-white transition-all duration-200 capitalize"
                             type="button"
                         >

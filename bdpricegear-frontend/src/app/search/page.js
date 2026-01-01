@@ -91,14 +91,12 @@ function SearchResults() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black pt-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-gray-950 to-black pt-4">
       {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
+      <div className="absolute inset-0 opacity-[0.15]">
         <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 20% 50%, #3b82f6 1px, transparent 1px),
-                           radial-gradient(circle at 80% 20%, #8b5cf6 1px, transparent 1px),
-                           radial-gradient(circle at 40% 80%, #06b6d4 1px, transparent 1px)`,
-          backgroundSize: '50px 50px'
+          backgroundImage: 'linear-gradient(rgba(16, 185, 129, 0.1) 2px, transparent 2px), linear-gradient(90deg, rgba(16, 185, 129, 0.1) 2px, transparent 2px)',
+          backgroundSize: '60px 60px'
         }}></div>
       </div>
 

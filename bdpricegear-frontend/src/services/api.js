@@ -113,15 +113,16 @@ const retryWithBackoff = async (fn, maxRetries = 3, baseDelay = 2000) => {
 
 export const priceComparisonAPI = {
   searchProducts: async (productName) => {
-    // Build the URL
-    const url = `${API_ENDPOINTS.PRICE_COMPARISON}?product=${encodeURIComponent(productName)}`;
+    // Build the URL - remove trailing slash if present before adding query params
+    const endpoint = API_ENDPOINTS.PRICE_COMPARISON.replace(/\/$/, '');
+    const url = `${endpoint}/?product=${encodeURIComponent(productName)}`;
     
-    // console.log('Starting API Request:', {
-    //   url,
-    //   product: productName,
-    //   useProxy: API_CONFIG?.USE_PROXY,
-    //   endpoint: API_ENDPOINTS.PRICE_COMPARISON,
-    // });
+    console.log('Starting API Request:', {
+      url,
+      product: productName,
+      useProxy: API_CONFIG?.USE_PROXY,
+      endpoint: API_ENDPOINTS.PRICE_COMPARISON,
+    });
     
     const makeRequest = async () => {
       try {
@@ -135,34 +136,35 @@ export const priceComparisonAPI = {
           },
         };
         
-        // console.log('Axios Request Config:', requestConfig);
+        console.log('Axios Request Config:', requestConfig);
 
         const response = await apiClient(requestConfig);
         
-        // console.log('API Success - Data received:', {
-        //   status: response.status,
-        //   hasData: !!response.data,
-        //   dataStructure: response.data ? Object.keys(response.data) : [],
-        //   shopsPresent: !!response.data?.shops,
-        //   shopsCount: Array.isArray(response.data?.shops) ? response.data.shops.length : 'Not array or missing',
-        // });
+        console.log('API Success - Data received:', {
+          status: response.status,
+          hasData: !!response.data,
+          dataStructure: response.data ? Object.keys(response.data) : [],
+          shopsPresent: !!response.data?.shops,
+          shopsCount: Array.isArray(response.data?.shops) ? response.data.shops.length : 'Not array or missing',
+          fullData: response.data,
+        });
         
         return response.data;
       } 
 
       catch (error) {
-        // console.error('API Request Failed:', {
-        //   errorType: error.name,
-        //   message: error.message,
-        //   code: error.code,
-        //   status: error.response?.status,
-        //   statusText: error.response?.statusText,
-        //   responseData: error.response?.data,
-        //   isTimeout: error.code === 'ECONNABORTED',
-        //   isNetwork: error.code === 'ERR_NETWORK',
-        //   isCors: error.message?.includes('CORS'),
-        //   requestUrl: url,
-        // });
+        console.error('API Request Failed:', {
+          errorType: error.name,
+          message: error.message,
+          code: error.code,
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          responseData: error.response?.data,
+          isTimeout: error.code === 'ECONNABORTED',
+          isNetwork: error.code === 'ERR_NETWORK',
+          isCors: error.message?.includes('CORS'),
+          requestUrl: url,
+        });
         
         //diff types of errors
         if (error.code === 'ECONNABORTED') {
