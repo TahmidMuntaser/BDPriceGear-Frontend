@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useProductSearch } from '../../hooks/useProductSearch';
 import NavbarSearch from '../NavbarSearch';
 import Link from 'next/link';
 import { 
@@ -18,8 +17,7 @@ import {
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
-  
-  const { searchTerm, setSearchTerm, handleSearch, loading } = useProductSearch();
+  const [searchTerm, setSearchTerm] = useState('');
   
   const [cartCount] = useState(0);
   const [wishlistCount] = useState(0);
@@ -63,8 +61,6 @@ export default function Navbar() {
               <NavbarSearch 
                 searchTerm={searchTerm}
                 setSearchTerm={setSearchTerm}
-                onSearch={handleSearch}
-                loading={loading}
                 className="w-full"
               />
             </div>
@@ -138,8 +134,6 @@ export default function Navbar() {
             <NavbarSearch 
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
-              onSearch={handleSearch}
-              loading={loading}
               className="w-full"
             />
           </div>

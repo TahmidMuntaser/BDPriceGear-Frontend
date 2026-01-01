@@ -11,8 +11,8 @@ export default function NavbarSearch({searchTerm, setSearchTerm, onSearch, loadi
         e.preventDefault();
         if (searchTerm.trim()) {
             setIsSearching(true);
-            // Navigate to search results page
-            router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+            // Navigate to products page with search query
+            router.push(`/products?q=${encodeURIComponent(searchTerm.trim())}`);
             // Reset searching state after a brief delay
             setTimeout(() => setIsSearching(false), 1000);
         }

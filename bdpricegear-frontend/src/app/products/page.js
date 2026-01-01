@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useCategories } from '@/hooks/useCategories';
 import { useShops } from '@/hooks/useShops';
 import ProductGridSkeleton from '@/components/ProductGridSkeleton';
@@ -11,96 +12,167 @@ import { SlidersHorizontal, X } from 'lucide-react';
 
 
 export default function ProductsPage() {
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get('q') || '';
+  
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedShops, setSelectedShops] = useState([]);
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
   const [availability, setAvailability] = useState('all');
   const [sortOrder, setSortOrder] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const productsPerPage = 15;
+  const productsPerPage = 20;
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  
+  // Reset filters when search query changes
+  useEffect(() => {
+    setSelectedCategory('');
+    setSelectedShops([]);
+    setPriceRange({ min: '', max: '' });
+    setAvailability('all');
+    setSortOrder('');
+  }, [searchQuery]);
 
   const { categories } = useCategories();
   const { shops } = useShops();
 
-  // Fetch products progressively - load first page immediately, then fetch rest in background
+  // Fetch products - either search results or all products
   useEffect(() => {
     const CACHE_KEY = 'bdpricegear_products_cache';
     const CACHE_TIMESTAMP_KEY = 'bdpricegear_products_timestamp';
     const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
+    
+    let isCancelled = false; // Flag to cancel ongoing operations
+
+    const fetchSearchResults = async () => {
+      setAllProducts([]);
+      setLoading(true);
+      setError(null);
+      setIsLoadingMore(false);
+      
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://bdpricegear-backend.onrender.com/api';
+        const response = await fetch(`${baseUrl}/products/?product=${encodeURIComponent(searchQuery)}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Handle different response formats
+        let productsData = [];
+        if (Array.isArray(data)) {
+          productsData = data;
+        } else if (data?.results && Array.isArray(data.results)) {
+          productsData = data.results;
+        } else if (data?.products && Array.isArray(data.products)) {
+          productsData = data.products;
+        }
+        
+        // Only update if not cancelled
+        if (!isCancelled) {
+          setAllProducts(productsData);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (!isCancelled) {
+          setError(err.message || 'Failed to fetch search results');
+          setLoading(false);
+        }
+      }
+    };
 
     const fetchAllProducts = async () => {
+      setAllProducts([]);
       setLoading(true);
       setError(null);
       
       try {
-        // Check if we have cached data
-        const cachedData = localStorage.getItem(CACHE_KEY);
-        const cachedTimestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
-        // Only cache first 4 and 5 pages, not all products
         const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://bdpricegear-backend.onrender.com/api';
-        console.log('Fetching first page...');
-        // Fetch first page immediately
+        
         const firstResponse = await fetch(`${baseUrl}/products/?page=1&page_size=100`);
         if (!firstResponse.ok) {
           throw new Error(`HTTP error! status: ${firstResponse.status}`);
         }
         const firstData = await firstResponse.json();
-        console.log(`First page loaded: ${firstData.results.length} products`);
-        setAllProducts(firstData.results);
-        setLoading(false); // Show products immediately
+        
+        // Only update if not cancelled
+        if (!isCancelled) {
+          setAllProducts(firstData.results);
+          setLoading(false);
+        }
+        
         // Continue fetching remaining pages in background
-        if (firstData.next) {
+        if (firstData.next && !isCancelled) {
           setIsLoadingMore(true);
           const fetchedProducts = [...firstData.results];
           let page = 2;
           let hasMore = !!firstData.next;
-          console.log('Loading remaining products in background...');
+          
           try {
-            while (hasMore) {
+            while (hasMore && !isCancelled) {
               const url = `${baseUrl}/products/?page=${page}&page_size=100`;
               const response = await fetch(url);
+              
               if (!response.ok) {
                 if (response.status === 404) {
-                  console.log(`Page ${page} not found, stopping...`);
                   hasMore = false;
                   break;
                 }
                 throw new Error(`HTTP error! status: ${response.status}`);
               }
+              
               const data = await response.json();
               if (data.results && data.results.length > 0) {
                 fetchedProducts.push(...data.results);
+                
                 // Cache pages 1 to 5
                 if (page >= 1 && page <= 5) {
                   localStorage.setItem(`${CACHE_KEY}_page${page}`, JSON.stringify(data.results));
                   localStorage.setItem(`${CACHE_TIMESTAMP_KEY}_page${page}`, Date.now().toString());
-                  console.log(`Page ${page} cached to browser storage`);
                 }
-                setAllProducts([...fetchedProducts]); // Update products as we fetch
-                console.log(`Fetched page ${page}: ${data.results.length} products (Total: ${fetchedProducts.length})`);
+                
+                // Only update if not cancelled
+                if (!isCancelled) {
+                  setAllProducts([...fetchedProducts]);
+                }
+                
                 hasMore = !!data.next;
                 page++;
               } else {
                 hasMore = false;
               }
-              // No safety limit: fetch all pages
             }
           } finally {
-            setIsLoadingMore(false);
+            if (!isCancelled) {
+              setIsLoadingMore(false);
+            }
           }
         }
       } catch (err) {
-        console.error('Error fetching products:', err);
-        setError(err.message || 'Failed to fetch products');
-        setLoading(false);
+        if (!isCancelled) {
+          setError(err.message || 'Failed to fetch products');
+          setLoading(false);
+        }
       }
+    };
+    
+    // If there's a search query, fetch search results directly from API
+    if (searchQuery) {
+      fetchSearchResults();
+    } else {
+      fetchAllProducts();
     }
-    fetchAllProducts();
-  }, []);
+    
+    // Cleanup function to cancel ongoing operations
+    return () => {
+      isCancelled = true;
+    };
+  }, [searchQuery]);
 
   // Apply all filters and sorting on the frontend
   const getFilteredAndSortedProducts = () => {
@@ -109,6 +181,9 @@ export default function ProductsPage() {
     }
     
     let filtered = [...allProducts];
+
+    // Note: Search query filtering is now handled by the API call
+    // No need to filter by searchQuery here since we fetch from API directly
 
     // Filter by category
     if (selectedCategory) {
@@ -226,7 +301,7 @@ export default function ProductsPage() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory, selectedShops.length, priceRange.min, priceRange.max, availability, sortOrder]);
+  }, [selectedCategory, selectedShops.length, priceRange.min, priceRange.max, availability, sortOrder, searchQuery]);
 
   const clearError = () => setError(null);
 
@@ -268,10 +343,10 @@ export default function ProductsPage() {
           </nav>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
           {/* Filters Sidebar */}
-          <div className="lg:w-1/4">
-            <div className="bg-gray-800 border border-gray-700 rounded-lg p-5">
+          <div className="lg:w-1/5">
+            <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
                   <SlidersHorizontal className="w-5 h-5 text-emerald-500" />
@@ -451,7 +526,7 @@ export default function ProductsPage() {
               </div>
 
               {/* Active Filters Summary */}
-              {(selectedCategory || selectedShops.length > 0 || priceRange.min || priceRange.max || availability !== 'all' || sortOrder) && (
+              {(searchQuery || selectedCategory || selectedShops.length > 0 || priceRange.min || priceRange.max || availability !== 'all' || sortOrder) && (
                 <div className="pt-6 border-t border-gray-700">
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-xs font-medium text-gray-400">Active Filters</p>
@@ -463,6 +538,14 @@ export default function ProductsPage() {
                     </button>
                   </div>
                   <div className="space-y-2">
+                    {searchQuery && (
+                      <div className="flex items-center justify-between bg-emerald-700/50 px-3 py-2 rounded text-xs text-gray-300">
+                        <span>Search: {searchQuery}</span>
+                        <Link href="/products" className="text-gray-400 hover:text-white">
+                          <X className="w-3 h-3" />
+                        </Link>
+                      </div>
+                    )}
                     {sortOrder && (
                       <div className="flex items-center justify-between bg-gray-700/50 px-3 py-2 rounded text-xs text-gray-300">
                         <span>Sort: {sortOrder === 'low-to-high' ? 'Low to High' : 'High to Low'}</span>
@@ -520,11 +603,16 @@ export default function ProductsPage() {
             {/* Page Header */}
             <div className="mb-6 text-center">
               <h1 className="text-5xl font-bold text-white mb-2">
-                Product Catalog
+                {searchQuery ? `Search Results for "${searchQuery}"` : 'Product Catalog'}
               </h1>
               {!loading && totalCount > 0 && (
                 <p className="text-gray-400 pb-4">
-                  Showing {totalCount.toLocaleString()} products
+                  Showing {totalCount.toLocaleString()} {searchQuery ? 'matching ' : ''}products
+                </p>
+              )}
+              {!loading && searchQuery && totalCount === 0 && (
+                <p className="text-red-400 pb-4">
+                  No products found for "{searchQuery}"
                 </p>
               )}
             </div>

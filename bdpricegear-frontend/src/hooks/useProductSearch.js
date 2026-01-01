@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { priceComparisonAPI } from '../services/api';
+import axios from 'axios';
 
 export function useProductSearch() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,7 +18,6 @@ export function useProductSearch() {
       return;
     }
 
-    // console.log('Starting search for:', searchTerm);
     setLoading(true);
     setError(null);
     setResults([]);
@@ -26,48 +25,28 @@ export function useProductSearch() {
     const startTime = performance.now();
 
     try {
-      // console.log('Calling priceComparisonAPI.searchProducts...');
-      const data = await priceComparisonAPI.searchProducts(searchTerm);
+      // Use the catalog API endpoint
+      const response = await axios.get(`/api/products/?product=${encodeURIComponent(searchTerm)}`);
+      const data = response.data;
       
-      // console.log('Search completed successfully:', {
-      //   dataReceived: !!data,
-      //   dataType: typeof data,
-      //   isArray: Array.isArray(data),
-      //   dataLength: Array.isArray(data) ? data.length : 'Not an array',
-      //   dataKeys: data ? Object.keys(data) : [],
-      //   hasShops: !!data?.shops,
-      // });
-
-      // Handle different response formats
-      let shopsData = [];
+      // Handle the products response from catalog
+      let productsData = [];
       if (Array.isArray(data)) {
-        // directly an array of shops
-        shopsData = data;
-      } else if (data?.shops && Array.isArray(data.shops)) {
-        // a shops property
-        shopsData = data.shops;
-      } else if (data) {
-        //  a single shop object
-        shopsData = [data];
+        productsData = data;
+      } else if (data?.results && Array.isArray(data.results)) {
+        productsData = data.results;
+      } else if (data?.products && Array.isArray(data.products)) {
+        productsData = data.products;
       }
 
-      // console.log('🏪 Processed shops data:', {
-      //   shopsCount: shopsData.length,
-      //   shops: shopsData.map(shop => ({
-      //     name: shop.name,
-      //     productCount: shop.products?.length || 0
-      //   }))
-      // });
-
-      setResults(shopsData);
+      setResults(productsData);
       setCurrentPage(1); // Reset to first page on new search
       
-      if (shopsData.length === 0) {
+      if (productsData.length === 0) {
         setError('No products found for your search. Try a different search term.');
       }
     } catch (err) {
-      // console.error(' Search failed:', err);
-      setError(err.message || 'Failed to fetch price data. Please try again.');
+      setError(err.response?.data?.message || err.message || 'Failed to fetch products. Please try again.');
     } finally {
       const endTime = performance.now();
       const timeTaken = (endTime - startTime) / 1000; // Convert ms to seconds
@@ -78,13 +57,8 @@ export function useProductSearch() {
 
   const clearError = () => setError(null);
 
-  // Get all products from all stores with pagination
-  const allProducts = results.flatMap(shop => 
-    shop.products?.map(product => ({
-      ...product,
-      storeName: shop.name
-    })) || []
-  );
+  // Products are now directly in results array
+  const allProducts = results;
 
   const totalProducts = allProducts.length;
   const totalPages = Math.ceil(totalProducts / productsPerPage);
