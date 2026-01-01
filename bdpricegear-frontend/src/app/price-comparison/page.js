@@ -20,7 +20,7 @@ function PriceComparisonContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 20;
   const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(!!productQuery); // Start with true if there's a query
   const [error, setError] = useState(null);
   const [responseTime, setResponseTime] = useState(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -151,9 +151,104 @@ function PriceComparisonContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-gray-950 to-black pt-4">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <ProductGridSkeleton />
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-gray-950 to-black pt-4 relative">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-[0.15]">
+          <div className="absolute inset-0" style={{
+            backgroundImage: 'linear-gradient(rgba(16, 185, 129, 0.1) 2px, transparent 2px), linear-gradient(90deg, rgba(16, 185, 129, 0.1) 2px, transparent 2px)',
+            backgroundSize: '60px 60px'
+          }}></div>
+        </div>
+
+        {/* Loading Message */}
+        <div className="fixed inset-0 flex items-center justify-center z-40">
+          <div className="bg-gradient-to-br from-gray-900 to-gray-950 border border-emerald-500/30 rounded-2xl p-8 sm:p-12 max-w-md mx-4 shadow-2xl shadow-emerald-500/20">
+            <div className="flex flex-col items-center text-center">
+              {/* Animated Icon */}
+              <div className="relative mb-6">
+                <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center animate-pulse">
+                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur-xl opacity-50 animate-pulse"></div>
+              </div>
+
+              {/* Loading Spinner */}
+              <div className="w-16 h-16 mb-6">
+                <svg className="animate-spin" viewBox="0 0 50 50">
+                  <circle
+                    className="stroke-emerald-500/30"
+                    cx="25"
+                    cy="25"
+                    r="20"
+                    fill="none"
+                    strokeWidth="4"
+                  />
+                  <circle
+                    className="stroke-emerald-500"
+                    cx="25"
+                    cy="25"
+                    r="20"
+                    fill="none"
+                    strokeWidth="4"
+                    strokeDasharray="80"
+                    strokeDashoffset="60"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </div>
+
+              {/* Text */}
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent mb-3">
+                Fetching Real-Time Prices
+              </h3>
+              <p className="text-gray-400 mb-2">
+                Searching across multiple stores...
+              </p>
+              <p className="text-sm text-gray-500">
+                This may take 1-2 minutes for live data
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 py-6 sm:py-8 opacity-30">
+          {/* Breadcrumb Skeleton */}
+          <div className="mb-6 flex items-center gap-2">
+            <div className="h-4 w-12 bg-gray-700/50 rounded animate-pulse"></div>
+            <div className="h-4 w-4 bg-gray-700/50 rounded animate-pulse"></div>
+            <div className="h-4 w-32 bg-gray-700/50 rounded animate-pulse"></div>
+          </div>
+
+          {/* Header Skeleton */}
+          <div className="mb-8 sm:mb-10">
+            <div className="h-8 w-48 bg-gray-700/50 rounded-lg mb-2 animate-pulse"></div>
+            <div className="h-6 w-96 bg-gray-700/50 rounded-lg animate-pulse"></div>
+          </div>
+
+          <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
+            {/* Filter Sidebar Skeleton */}
+            <div className="lg:w-1/5">
+              <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 space-y-6">
+                <div className="h-6 w-24 bg-gray-700/50 rounded animate-pulse"></div>
+                <div className="space-y-3">
+                  <div className="h-12 bg-gray-700/50 rounded-lg animate-pulse"></div>
+                  <div className="h-12 bg-gray-700/50 rounded-lg animate-pulse"></div>
+                  <div className="h-12 bg-gray-700/50 rounded-lg animate-pulse"></div>
+                </div>
+                <div className="space-y-3">
+                  <div className="h-10 bg-gray-700/50 rounded-lg animate-pulse"></div>
+                  <div className="h-10 bg-gray-700/50 rounded-lg animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Products Grid Skeleton */}
+            <div className="flex-1">
+              <ProductGridSkeleton />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -429,23 +524,27 @@ function PriceComparisonContent() {
 
             {/* Products Grid */}
             <div className="flex-1">
+            <div className="mb-8">
               <Pagination 
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
                 totalProducts={totalCount}
                 productsPerPage={productsPerPage}
-              />
+              /> 
+            </div>
 
               <ProductGrid products={currentProducts} showModal={true} />
 
-              <Pagination 
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-                totalProducts={totalCount}
-                productsPerPage={productsPerPage}
-              />
+              <div className="mt-8">
+                <Pagination 
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                  totalProducts={totalCount}
+                  productsPerPage={productsPerPage}
+                />
+              </div>
             </div>
           </div>
         )}

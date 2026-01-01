@@ -33,7 +33,7 @@ export default function SearchForm({searchTerm, setSearchTerm, onSearch, loading
     return (
         <div className="max-w-3xl mx-auto mb-16">
             <form onSubmit={handleSubmit} className="relative group">  
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-300"></div>
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-300"></div>
                 <div className="relative bg-gray-900/90 backdrop-blur-xl rounded-2xl p-8 border border-gray-800/50">
                     <div className="flex flex-col md:flex-row gap-4">
                             <div className="relative flex-1">
@@ -47,13 +47,13 @@ export default function SearchForm({searchTerm, setSearchTerm, onSearch, loading
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     placeholder="Search for products..."
-                                    className="w-full pl-12 pr-4 py-4 bg-gray-800/50 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
+                                    className="w-full pl-12 pr-4 py-4 bg-gray-800/50 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-200"
                                 />
                             </div>
                             <button
                                 type="submit"
                                 disabled={loading || !searchTerm.trim()}
-                                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
+                                className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40"
                                 >
                                 {loading ? (
                                     <div className="flex items-center space-x-2">
@@ -69,7 +69,7 @@ export default function SearchForm({searchTerm, setSearchTerm, onSearch, loading
                     {/* Quick suggestions */}
                     <div className="mt-6 flex flex-wrap justify-center gap-2">
                         <span className="text-sm text-gray-400 mr-2">Popular:</span>
-                        {['laptop', 'phone', 'headphones', 'mouse', 'keyboard'].map((suggestion) => (
+                        {['laptop', 'mouse', 'keyboard', 'ram', 'SSD', 'monitor'].map((suggestion) => (
                         <button
                             key={suggestion}
                             onClick={() => handleSuggestionClick(suggestion)}
