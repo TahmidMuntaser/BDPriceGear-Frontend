@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useCategories } from '@/hooks/useCategories';
 import { useShops } from '@/hooks/useShops';
@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { SlidersHorizontal, X } from 'lucide-react';
 
 
-export default function ProductsPage() {
+function ProductsContent() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('q') || '';
   
@@ -811,5 +811,19 @@ export default function ProductsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-gray-950 to-black pt-4">
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <ProductGridSkeleton />
+        </div>
+      </div>
+    }>
+      <ProductsContent />
+    </Suspense>
   );
 }
