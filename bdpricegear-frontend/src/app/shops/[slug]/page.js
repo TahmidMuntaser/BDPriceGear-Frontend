@@ -100,7 +100,7 @@ export default function ShopDetailPage() {
           </div>
           
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">Shop Not Found</h2>
-          <p className="text-gray-400 mb-8 text-sm sm:text-base max-w-md">The shop you're looking for doesn't exist</p>
+          <p className="text-gray-400 mb-8 text-sm sm:text-base max-w-md">The shop you&apos;re looking for doesn&apos;t exist</p>
           
           <button
             onClick={() => router.push('/shops')}
@@ -323,7 +323,7 @@ export default function ShopDetailPage() {
               <div className="absolute -bottom-1 -left-1 w-5 h-5 border-b-2 border-l-2 border-teal-400 rounded-bl-lg"></div>
             </div>
             <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">No Products Yet</h3>
-            <p className="text-gray-400 text-sm sm:text-base">This shop hasn't listed any products at the moment</p>
+            <p className="text-gray-400 text-sm sm:text-base">This shop hasn&apos;t listed any products at the moment</p>
           </div>
         )}
 

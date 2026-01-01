@@ -659,7 +659,7 @@ export default function ProductsPage() {
               <h1 className="text-xl md:text-2xl font-bold text-white mb-2">
                 {searchQuery ? (
                   <>
-                    Search Results for <span className="text-base md:text-lg text-emerald-400">"{searchQuery}"</span>
+                    Search Results for <span className="text-base md:text-lg text-emerald-400">&quot;{searchQuery}&quot;</span>
                   </>
                 ) : 'Product Catalog'}
               </h1>
@@ -670,7 +670,7 @@ export default function ProductsPage() {
               )}
               {!loading && searchQuery && totalCount === 0 && (
                 <p className="text-red-400 pb-4">
-                  No products found for "{searchQuery}"
+                  No products found for &quot;{searchQuery}&quot;
                 </p>
               )}
             </div>
