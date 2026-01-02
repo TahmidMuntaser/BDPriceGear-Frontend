@@ -72,13 +72,13 @@ export default function PriceComparison() {
             </div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold">
               <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300 bg-clip-text text-transparent">
-                BD Price Gear
+                BDPriceGear
               </span>
             </h1>
           </div>
 
           <p className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-4">
-            Compare. Save. Shop Smart.
+            Compare Save Shop Smart
           </p>
           <p className="text-gray-400 text-base sm:text-lg max-w-2xl mx-auto mb-12">
             Find the best prices across Bangladesh&apos;s top e-commerce stores in seconds. Save money on every purchase.
@@ -144,7 +144,7 @@ export default function PriceComparison() {
                   24/7
                 </div>
                 <div className="text-gray-400 text-sm sm:text-base">Price Monitoring</div>
-              </div>false
+              </div>
             </div>
           </div>
         </div>
