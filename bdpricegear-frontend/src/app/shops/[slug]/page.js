@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useShopDetail } from '@/hooks/useShops';
 import Link from 'next/link';
 import Image from 'next/image';
+import Breadcrumb from '@/components/Breadcrumb';
 
 export default function ShopDetailPage() {
   const params = useParams();
@@ -132,18 +133,10 @@ export default function ShopDetailPage() {
 
       <div className="relative max-w-7xl mx-auto px-4 py-6 sm:py-12">
         {/* Breadcrumb Navigation */}
-        <nav className="mb-8 sm:mb-10 flex items-center gap-2 text-sm bg-gradient-to-r from-white/5 to-transparent backdrop-blur-sm border border-white/10 rounded-xl px-4 py-3 w-fit">
-          <Link href="/shops" className="text-emerald-400 hover:text-emerald-300 transition-colors font-semibold flex items-center gap-1.5 group">
-            <svg className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-            Shops
-          </Link>
-          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-          <span className="text-gray-300 font-medium">{shop.name}</span>
-        </nav>
+        <Breadcrumb items={[
+          { label: 'Shops', href: '/shops', icon: 'shops' },
+          { label: shop.name }
+        ]} />
 
         {/* Enhanced Shop Header */}
         <div className="relative bg-gradient-to-br from-white/10 to-white/[0.03] backdrop-blur-md border-2 border-white/20 rounded-2xl p-6 sm:p-10 mb-10 sm:mb-14 shadow-2xl shadow-emerald-500/10 overflow-hidden group">

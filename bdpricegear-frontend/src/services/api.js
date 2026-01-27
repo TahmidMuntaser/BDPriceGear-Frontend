@@ -242,6 +242,40 @@ export const priceComparisonAPI = {
 
 // Product Catalog APIs
 export const catalogAPI = {
+  // Get ALL products at once (full catalog)
+  getAllProducts: async (filters = {}) => {
+    let url = `${API_ENDPOINTS.PRODUCTS}?page_size=all`;
+    
+    // Add filter parameters - only if they have actual values
+    if (filters.category && filters.category.trim() !== '') {
+      url += `&category=${encodeURIComponent(filters.category)}`;
+    }
+    if (filters.shop && filters.shop.trim() !== '') {
+      url += `&shop=${encodeURIComponent(filters.shop)}`;
+    }
+    
+    console.log('🔍 Fetching ALL products URL:', url);
+    
+    const makeRequest = async () => {
+      const response = await apiClient.get(url);
+      console.log('✅ All Products Response:', {
+        count: response.data.count || response.data.length,
+        resultsLength: response.data.results?.length || response.data.length
+      });
+      // Handle both paginated and non-paginated response formats
+      if (response.data.results) {
+        return response.data.results;
+      }
+      return response.data;
+    };
+    
+    try {
+      return await retryWithBackoff(makeRequest, 2, 1500);
+    } catch (error) {
+      throw new Error(`Failed to fetch all products: ${error.message}`);
+    }
+  },
+
   // Get all products with pagination and filters
   getProducts: async (page = 1, pageSize = 50, filters = {}) => {
     let url = `${API_ENDPOINTS.PRODUCTS}?page=${page}&page_size=${pageSize}`;

@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useCategoryDetail } from '@/hooks/useCategories';
 import Link from 'next/link';
 import Image from 'next/image';
+import Breadcrumb from '@/components/Breadcrumb';
 
 export default function CategoryDetailPage() {
   const params = useParams();
@@ -63,34 +64,34 @@ export default function CategoryDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black pt-4">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-gray-950 to-black pt-4 relative overflow-hidden">
+      {/* Enhanced Background */}
+      <div className="absolute inset-0 opacity-[0.15]">
         <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 20% 50%, #3b82f6 1px, transparent 1px),
-                           radial-gradient(circle at 80% 20%, #8b5cf6 1px, transparent 1px),
-                           radial-gradient(circle at 40% 80%, #06b6d4 1px, transparent 1px)`,
-          backgroundSize: '50px 50px'
+          backgroundImage: 'linear-gradient(rgba(16, 185, 129, 0.15) 2px, transparent 2px), linear-gradient(90deg, rgba(16, 185, 129, 0.15) 2px, transparent 2px)',
+          backgroundSize: '60px 60px'
         }}></div>
+        <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/5 via-transparent to-teal-500/5"></div>
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 py-12">
+      {/* Ambient glow effects */}
+      <div className="absolute top-40 left-20 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-40 right-20 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+
+      <div className="relative max-w-7xl mx-auto px-4 py-6 sm:py-12">
         {/* Breadcrumb */}
-        <nav className="mb-8 flex items-center space-x-2 text-sm">
-          <Link href="/categories" className="text-blue-400 hover:text-blue-300 transition-colors">
-            Categories
-          </Link>
-          <span className="text-gray-500">/</span>
-          <span className="text-gray-300">{category.name}</span>
-        </nav>
+        <Breadcrumb items={[
+          { label: 'Categories', href: '/categories', icon: 'categories' },
+          { label: category.name }
+        ]} />
 
         {/* Category Header */}
         <div className="text-center mb-12">
-          <h1 className="text-5xl font-black bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent mb-4 tracking-tight">
+          <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent mb-4 tracking-tight">
             {category.name}
           </h1>
           {category.description && (
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto">
               {category.description}
             </p>
           )}

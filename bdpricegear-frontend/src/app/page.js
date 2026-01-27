@@ -4,18 +4,58 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import SearchForm from '../components/SearchForm';
+import ProductGrid from '../components/ProductGrid';
 import { useCategories } from '../hooks/useCategories';
 import { useShops } from '../hooks/useShops';
-import { TrendingUp, Zap, Shield, Clock, ArrowRight, Search, Tag, Store, ShoppingBag } from 'lucide-react';
+import { catalogAPI } from '../services/api';
+import { TrendingUp, Zap, Shield, Clock, ArrowRight, Search, Tag, Store, ShoppingBag, Package } from 'lucide-react';
 
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [allProducts, setAllProducts] = useState([]);
+  const [displayedProducts, setDisplayedProducts] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState(null);
+  const [visibleCount, setVisibleCount] = useState(24); // Show 24 products initially
   const router = useRouter();
 
   // Fetch data using hooks
   const { categories, loading: categoriesLoading } = useCategories();
   const { shops, loading: shopsLoading } = useShops();
+
+  // Fetch all products on mount
+  useEffect(() => {
+    const fetchAllProducts = async () => {
+      try {
+        setProductsLoading(true);
+        setProductsError(null);
+        const products = await catalogAPI.getAllProducts();
+        setAllProducts(products);
+        setDisplayedProducts(products.slice(0, 24)); // Initially show 24
+      } catch (error) {
+        console.error('Failed to fetch all products:', error);
+        setProductsError(error.message);
+      } finally {
+        setProductsLoading(false);
+      }
+    };
+
+    fetchAllProducts();
+  }, []);
+
+  // Update displayed products when visibleCount changes
+  useEffect(() => {
+    setDisplayedProducts(allProducts.slice(0, visibleCount));
+  }, [visibleCount, allProducts]);
+
+  const loadMore = () => {
+    setVisibleCount(prev => Math.min(prev + 24, allProducts.length));
+  };
+
+  const showAll = () => {
+    setVisibleCount(allProducts.length);
+  };
 
   const handleSearch = () => {
     if (searchTerm.trim()) {
@@ -266,6 +306,64 @@ export default function Home() {
           </div>
         )}
 
+        {/* Full Product Catalog Section */}
+        <div className="mb-16">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl sm:text-4xl font-bold text-white">
+              Full <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Catalog</span>
+            </h2>
+            <div className="flex items-center gap-2 text-gray-400">
+              <Package className="w-5 h-5 text-emerald-400" />
+              <span>{displayedProducts.length} of {allProducts.length} products</span>
+            </div>
+          </div>
+          
+          {productsLoading ? (
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-12">
+              <div className="flex flex-col items-center justify-center">
+                <div className="w-16 h-16 border-4 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin mb-4"></div>
+                <p className="text-gray-400 text-lg">Loading full catalog...</p>
+              </div>
+            </div>
+          ) : productsError ? (
+            <div className="bg-white/5 backdrop-blur-xl border border-red-500/30 rounded-2xl p-8 text-center">
+              <p className="text-red-400 mb-4">{productsError}</p>
+              <button 
+                onClick={() => window.location.reload()}
+                className="px-6 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          ) : displayedProducts.length > 0 ? (
+            <>
+              <ProductGrid products={displayedProducts} />
+              
+              {/* Load More / Show All Buttons */}
+              {visibleCount < allProducts.length && (
+                <div className="flex items-center justify-center gap-4 mt-8">
+                  <button
+                    onClick={loadMore}
+                    className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 shadow-lg hover:shadow-emerald-500/50 hover:scale-105"
+                  >
+                    Load More ({Math.min(24, allProducts.length - visibleCount)} more)
+                  </button>
+                  <button
+                    onClick={showAll}
+                    className="px-8 py-3 bg-white/10 border border-white/20 text-white rounded-xl font-semibold hover:bg-white/20 transition-all duration-300"
+                  >
+                    Show All ({allProducts.length - visibleCount} remaining)
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center">
+              <p className="text-gray-400">No products available in the catalog.</p>
+            </div>
+          )}
+        </div>
+
         {/* Stats Section */}
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 sm:p-12 mb-16">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
@@ -273,7 +371,7 @@ export default function Home() {
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               <div className="relative">
                 <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent mb-2">
-                  10,000+
+                  {allProducts.length > 0 ? allProducts.length.toLocaleString() + '+' : '10,000+'}
                 </div>
                 <div className="text-gray-400 text-sm sm:text-base">Products Tracked</div>
               </div>
