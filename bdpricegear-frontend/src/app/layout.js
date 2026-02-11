@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import "./globals.css";
 import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
+import { AuthProvider } from "../context/AuthContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,17 +26,19 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-900 min-h-screen flex flex-col`}
       >
-        <Suspense fallback={
-          <nav className="bg-gray-900 border-b border-gray-800 sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-4 h-16"></div>
-          </nav>
-        }>
-          <Navbar />
-        </Suspense>
-        <main className="relative flex-1">
-          {children}
-        </main>
-        <Footer />
+        <AuthProvider>
+          <Suspense fallback={
+            <nav className="bg-gray-900 border-b border-gray-800 sticky top-0 z-50">
+              <div className="max-w-7xl mx-auto px-4 h-16"></div>
+            </nav>
+          }>
+            <Navbar />
+          </Suspense>
+          <main className="relative flex-1">
+            {children}
+          </main>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );

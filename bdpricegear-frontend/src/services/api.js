@@ -69,46 +69,7 @@ apiClient.interceptors.response.use(
   }
 );
 
-// Utility function for delays
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Function to retry API with exp backoff
-const retryWithBackoff = async (fn, maxRetries = 3, baseDelay = 2000) => {
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      // console.log(`Attempt ${attempt}/${maxRetries}`);
-      return await fn();
-    } catch (error) {
-      // console.warn(`Attempt ${attempt} failed:`, {
-      //   message: error.message,
-      //   code: error.code,
-      //   status: error.response?.status,
-      // });
-
-      if (attempt === maxRetries) {
-        // console.error('All retry attempts exhausted');
-        throw error;
-      }
-      
-      // Only retry on network errors, timeouts, or server errors (5xx)
-      const shouldRetry = 
-        error.code === 'ECONNABORTED' || // timeout
-        error.code === 'ERR_NETWORK' || // network error
-        error.code === 'ERR_CONNECTION_REFUSED' || // connection refused
-        !error.response || // no response (network issue)
-        (error.response?.status && error.response.status >= 500);
-      
-      if (!shouldRetry) {
-        // console.warn('Error not retryable:', error.response?.status);
-        throw error;
-      }
-      
-      const delay = baseDelay * Math.pow(2, attempt - 1);
-      // console.log(`⏱Waiting ${delay}ms before retry ${attempt + 1}...`);
-      await sleep(delay);
-    }
-  }
-};
 
 
 export const priceComparisonAPI = {
@@ -204,8 +165,7 @@ export const priceComparisonAPI = {
     };
     
     try {
-      // console.log('Starting request with retry logic...');
-      return await retryWithBackoff(makeRequest, 3, 2000); // 3 retries with 2s, 4s, 8s delays
+      return await makeRequest();
     } catch (error) {
       // console.error('Final error after all retries:', {
       //   message: error.message,
@@ -270,7 +230,7 @@ export const catalogAPI = {
     };
     
     try {
-      return await retryWithBackoff(makeRequest, 2, 1500);
+      return await makeRequest();
     } catch (error) {
       throw new Error(`Failed to fetch all products: ${error.message}`);
     }
@@ -303,7 +263,7 @@ export const catalogAPI = {
     };
     
     try {
-      return await retryWithBackoff(makeRequest, 2, 1500);
+      return await makeRequest();
     } catch (error) {
       // Handle 404 specifically - return empty results instead of throwing
       if (error.response?.status === 404 || error.message?.includes('404')) {
@@ -323,13 +283,9 @@ export const catalogAPI = {
   getProductById: async (id) => {
     const url = API_ENDPOINTS.PRODUCT_DETAIL(id);
     
-    const makeRequest = async () => {
+    try {
       const response = await apiClient.get(url);
       return response.data;
-    };
-    
-    try {
-      return await retryWithBackoff(makeRequest, 2, 1500);
     } catch (error) {
       if (error.response?.status === 404) {
         throw new Error('Product not found');
@@ -342,13 +298,9 @@ export const catalogAPI = {
   getCategories: async () => {
     const url = API_ENDPOINTS.CATEGORIES;
     
-    const makeRequest = async () => {
+    try {
       const response = await apiClient.get(url);
       return response.data;
-    };
-    
-    try {
-      return await retryWithBackoff(makeRequest, 2, 1500);
     } catch (error) {
       throw new Error(`Failed to fetch categories: ${error.message}`);
     }
@@ -358,13 +310,9 @@ export const catalogAPI = {
   getCategoryById: async (slug) => {
     const url = API_ENDPOINTS.CATEGORY_DETAIL(slug);
     
-    const makeRequest = async () => {
+    try {
       const response = await apiClient.get(url);
       return response.data;
-    };
-    
-    try {
-      return await retryWithBackoff(makeRequest, 2, 1500);
     } catch (error) {
       if (error.response?.status === 404) {
         throw new Error('Category not found');
@@ -377,13 +325,9 @@ export const catalogAPI = {
   getShops: async () => {
     const url = API_ENDPOINTS.SHOPS;
     
-    const makeRequest = async () => {
+    try {
       const response = await apiClient.get(url);
       return response.data;
-    };
-    
-    try {
-      return await retryWithBackoff(makeRequest, 2, 1500);
     } catch (error) {
       throw new Error(`Failed to fetch shops: ${error.message}`);
     }
@@ -393,13 +337,9 @@ export const catalogAPI = {
   getShopById: async (slug) => {
     const url = API_ENDPOINTS.SHOP_DETAIL(slug);
     
-    const makeRequest = async () => {
+    try {
       const response = await apiClient.get(url);
       return response.data;
-    };
-    
-    try {
-      return await retryWithBackoff(makeRequest, 2, 1500);
     } catch (error) {
       if (error.response?.status === 404) {
         throw new Error('Shop not found');

@@ -20,16 +20,20 @@ export default function Home() {
   const [visibleCount, setVisibleCount] = useState(24); // Show 24 products initially
   const router = useRouter();
 
-  // Fetch data using hooks
+  // Fetch data using hooks - with delay to avoid rate limiting
   const { categories, loading: categoriesLoading } = useCategories();
   const { shops, loading: shopsLoading } = useShops();
 
-  // Fetch all products on mount
+  // Fetch all products on mount with a delay to stagger API calls
   useEffect(() => {
     const fetchAllProducts = async () => {
       try {
         setProductsLoading(true);
         setProductsError(null);
+        
+        // Add a 300ms delay to stagger API calls and avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
         const products = await catalogAPI.getAllProducts();
         setAllProducts(products);
         setDisplayedProducts(products.slice(0, 24)); // Initially show 24

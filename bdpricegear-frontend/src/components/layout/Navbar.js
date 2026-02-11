@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import NavbarSearch from '../NavbarSearch';
 import Link from 'next/link';
+import { useAuth } from '../../context/AuthContext';
+import LoginModal from '../modals/LoginModal';
+import SignupModal from '../modals/SignupModal';
 import { 
   Search, 
   ShoppingCart, 
@@ -12,15 +15,35 @@ import {
   User, 
   Menu, 
   X,
-  ChevronDown
+  ChevronDown,
+  LogIn,
+  UserPlus,
+  LogOut,
+  UserCircle
 } from 'lucide-react';
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  
+  const {
+    isLoggedIn,
+    logout,
+    checkAuth,
+    isLoginModalOpen,
+    isSignupModalOpen,
+    openLoginModal,
+    closeLoginModal,
+    openSignupModal,
+    closeSignupModal,
+    switchToSignup,
+    switchToLogin,
+    isMounted,
+  } = useAuth();
   
   // Clear search term when navigating away from products page or when search query is cleared
   useEffect(() => {
@@ -29,10 +52,39 @@ export default function Navbar() {
       setSearchTerm('');
     }
   }, [pathname, searchParams]);
+
+  // Close dropdowns when navigating
+  useEffect(() => {
+    setIsProfileOpen(false);
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
   
   const [cartCount] = useState(0);
   const [wishlistCount] = useState(0);
   const [compareCount] = useState(2);
+
+  // Handle logout
+  const handleLogout = () => {
+    logout();
+    setIsProfileOpen(false);
+  };
+
+  // Handle successful login/signup
+  const handleAuthSuccess = () => {
+    checkAuth();
+  };
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isProfileOpen && !event.target.closest('.profile-dropdown-container')) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isProfileOpen]);
 
   const categories = [
     { name: 'SSD', href: '/categories/ssd' },
@@ -117,12 +169,63 @@ export default function Navbar() {
                   )}
                 </Link>
 
-                <Link 
-                  href="/account"
-                  className="p-2 hover:bg-gray-800/50 rounded-lg transition-all duration-200 group"
-                >
-                  <User className="w-6 h-6 text-gray-400 group-hover:text-emerald-400 transition-colors" />
-                </Link>
+                {/* Profile Dropdown */}
+                <div className="relative profile-dropdown-container">
+                  <button
+                    onClick={() => setIsProfileOpen(!isProfileOpen)}
+                    className="p-2 hover:bg-gray-800/50 rounded-lg transition-all duration-200 group"
+                  >
+                    <User className="w-6 h-6 text-gray-400 group-hover:text-emerald-400 transition-colors" />
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {isProfileOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-gray-800/95 backdrop-blur-md border border-emerald-500/20 rounded-lg shadow-2xl shadow-emerald-950/50 z-50 overflow-hidden">
+                      {isLoggedIn ? (
+                        <>
+                          <Link
+                            href="/profile"
+                            onClick={() => setIsProfileOpen(false)}
+                            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-emerald-400 transition-all duration-200 border-l-2 border-transparent hover:border-emerald-500"
+                          >
+                            <UserCircle className="w-5 h-5" />
+                            <span>Profile</span>
+                          </Link>
+                          <button
+                            onClick={handleLogout}
+                            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-red-400 transition-all duration-200 border-l-2 border-transparent hover:border-red-500 w-full text-left"
+                          >
+                            <LogOut className="w-5 h-5" />
+                            <span>Logout</span>
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => {
+                              setIsProfileOpen(false);
+                              openLoginModal();
+                            }}
+                            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-emerald-400 transition-all duration-200 border-l-2 border-transparent hover:border-emerald-500 w-full text-left"
+                          >
+                            <LogIn className="w-5 h-5" />
+                            <span>Login</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIsProfileOpen(false);
+                              openSignupModal();
+                            }}
+                            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-emerald-400 transition-all duration-200 border-l-2 border-transparent hover:border-emerald-500 w-full text-left"
+                          >
+                            <UserPlus className="w-5 h-5" />
+                            <span>Sign Up</span>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Mobile Menu Button */}
@@ -270,15 +373,71 @@ export default function Navbar() {
                 <span className="text-xs text-gray-400 group-hover:text-teal-400 transition-colors">Cart</span>
               </Link>
 
-              <Link 
-                href="/account" 
+              {/* Profile Dropdown Button for Mobile */}
+              <button 
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
                 className="flex flex-col items-center gap-1 group"
-                onClick={() => setIsMobileMenuOpen(false)}
               >
                 <User className="w-6 h-6 text-gray-400 group-hover:text-emerald-400 transition-colors" />
                 <span className="text-xs text-gray-400 group-hover:text-emerald-400 transition-colors">Account</span>
-              </Link>
+              </button>
             </div>
+
+            {/* Profile Options for Mobile */}
+            {isProfileOpen && (
+              <div className="pb-4 mb-4 border-b border-emerald-900/20">
+                {isLoggedIn ? (
+                  <div className="space-y-1">
+                    <Link
+                      href="/profile"
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:text-emerald-400 hover:bg-gray-800/50 rounded-lg transition-all duration-200 border-l-2 border-transparent hover:border-emerald-500"
+                    >
+                      <UserCircle className="w-5 h-5" />
+                      <span>Profile</span>
+                    </Link>
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:text-red-400 hover:bg-gray-800/50 rounded-lg transition-all duration-200 border-l-2 border-transparent hover:border-red-500 w-full text-left"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <button
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        setIsMobileMenuOpen(false);
+                        openLoginModal();
+                      }}
+                      className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:text-emerald-400 hover:bg-gray-800/50 rounded-lg transition-all duration-200 border-l-2 border-transparent hover:border-emerald-500 w-full text-left"
+                    >
+                      <LogIn className="w-5 h-5" />
+                      <span>Login</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        setIsMobileMenuOpen(false);
+                        openSignupModal();
+                      }}
+                      className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:text-emerald-400 hover:bg-gray-800/50 rounded-lg transition-all duration-200 border-l-2 border-transparent hover:border-emerald-500 w-full text-left"
+                    >
+                      <UserPlus className="w-5 h-5" />
+                      <span>Sign Up</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Navigation Links */}
             <div className="space-y-1">
@@ -313,6 +472,24 @@ export default function Navbar() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Auth Modals - Only render on client to prevent hydration errors */}
+      {isMounted && (
+        <>
+          <LoginModal
+            isOpen={isLoginModalOpen}
+            onClose={closeLoginModal}
+            onSwitchToSignup={switchToSignup}
+            onLoginSuccess={handleAuthSuccess}
+          />
+          <SignupModal
+            isOpen={isSignupModalOpen}
+            onClose={closeSignupModal}
+            onSwitchToLogin={switchToLogin}
+            onSignupSuccess={handleAuthSuccess}
+          />
+        </>
       )}
     </nav>
   );
