@@ -1,6 +1,29 @@
 import axios from 'axios';
 import {API_ENDPOINTS, API_CONFIG} from '../config/constants';
 
+// Simple retry helper for network and server errors
+const retryRequest = async (fn, retries = 2, delay = 1000) => {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      const isLastAttempt = i === retries;
+      const shouldRetry = 
+        error.code === 'ECONNABORTED' || // timeout
+        error.code === 'ERR_NETWORK' || // network error
+        !error.response || // no response
+        (error.response?.status >= 500); // server error
+      
+      if (!shouldRetry || isLastAttempt) {
+        throw error;
+      }
+      
+      console.warn(`Retry attempt ${i + 1}/${retries} after ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+};
+
 // create axios instance 
 const apiClient = axios.create({
     timeout: 45000,
@@ -217,7 +240,7 @@ export const catalogAPI = {
     console.log('🔍 Fetching ALL products URL:', url);
     
     const makeRequest = async () => {
-      const response = await apiClient.get(url);
+      const response = await apiClient.get(url, { timeout: 90000 }); // 90 seconds for large dataset
       console.log('✅ All Products Response:', {
         count: response.data.count || response.data.length,
         resultsLength: response.data.results?.length || response.data.length
@@ -230,7 +253,7 @@ export const catalogAPI = {
     };
     
     try {
-      return await makeRequest();
+      return await retryRequest(makeRequest, 2, 2000);
     } catch (error) {
       throw new Error(`Failed to fetch all products: ${error.message}`);
     }
@@ -263,7 +286,7 @@ export const catalogAPI = {
     };
     
     try {
-      return await makeRequest();
+      return await retryRequest(makeRequest, 2, 1500);
     } catch (error) {
       // Handle 404 specifically - return empty results instead of throwing
       if (error.response?.status === 404 || error.message?.includes('404')) {
@@ -298,9 +321,13 @@ export const catalogAPI = {
   getCategories: async () => {
     const url = API_ENDPOINTS.CATEGORIES;
     
-    try {
+    const makeRequest = async () => {
       const response = await apiClient.get(url);
       return response.data;
+    };
+    
+    try {
+      return await retryRequest(makeRequest, 2, 1500);
     } catch (error) {
       throw new Error(`Failed to fetch categories: ${error.message}`);
     }
@@ -325,9 +352,13 @@ export const catalogAPI = {
   getShops: async () => {
     const url = API_ENDPOINTS.SHOPS;
     
-    try {
+    const makeRequest = async () => {
       const response = await apiClient.get(url);
       return response.data;
+    };
+    
+    try {
+      return await retryRequest(makeRequest, 2, 1500);
     } catch (error) {
       throw new Error(`Failed to fetch shops: ${error.message}`);
     }

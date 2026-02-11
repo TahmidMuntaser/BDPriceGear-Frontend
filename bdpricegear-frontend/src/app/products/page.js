@@ -149,11 +149,16 @@ function ProductsContent() {
       try {
         const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://bdpricegear-backend.onrender.com/api';
         
-        const firstResponse = await fetch(`${baseUrl}/products/?page=1&page_size=100`);
+        // Use larger page size to reduce number of requests needed
+        const pageSize = 200;
+        const firstResponse = await fetch(`${baseUrl}/products/?page=1&page_size=${pageSize}`);
         if (!firstResponse.ok) {
           throw new Error(`HTTP error! status: ${firstResponse.status}`);
         }
         const firstData = await firstResponse.json();
+        
+        console.log(`📊 Total products available: ${firstData.count}`);
+        console.log(`📄 Page 1 fetched: ${firstData.results?.length || 0} products`);
         
         // Only update if not cancelled
         if (!isCancelled) {
@@ -167,41 +172,73 @@ function ProductsContent() {
           const fetchedProducts = [...firstData.results];
           let page = 2;
           let hasMore = !!firstData.next;
+          let consecutiveErrors = 0;
+          const maxConsecutiveErrors = 3;
           
           try {
-            while (hasMore && !isCancelled) {
-              const url = `${baseUrl}/products/?page=${page}&page_size=100`;
-              const response = await fetch(url);
+            while (hasMore && !isCancelled && consecutiveErrors < maxConsecutiveErrors) {
+              const url = `${baseUrl}/products/?page=${page}&page_size=${pageSize}`;
               
-              if (!response.ok) {
-                if (response.status === 404) {
+              try {
+                // Add small delay between requests to avoid overwhelming the backend
+                if (page > 2) {
+                  await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                  if (response.status === 404) {
+                    console.log(`📭 Page ${page} not found (end of data)`);
+                    hasMore = false;
+                    break;
+                  }
+                  throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.results && data.results.length > 0) {
+                  fetchedProducts.push(...data.results);
+                  consecutiveErrors = 0; // Reset error counter on success
+                  
+                  console.log(`✅ Page ${page} fetched: ${data.results.length} products (Total: ${fetchedProducts.length}/${firstData.count})`);
+                  
+                  // Cache pages 1 to 5
+                  if (page >= 1 && page <= 5) {
+                    localStorage.setItem(`${CACHE_KEY}_page${page}`, JSON.stringify(data.results));
+                    localStorage.setItem(`${CACHE_TIMESTAMP_KEY}_page${page}`, Date.now().toString());
+                  }
+                  
+                  // Only update if not cancelled
+                  if (!isCancelled) {
+                    setAllProducts([...fetchedProducts]);
+                  }
+                  
+                  hasMore = !!data.next;
+                  page++;
+                } else {
+                  console.log(`⚠️ Page ${page} returned no results`);
                   hasMore = false;
-                  break;
                 }
-                throw new Error(`HTTP error! status: ${response.status}`);
-              }
-              
-              const data = await response.json();
-              if (data.results && data.results.length > 0) {
-                fetchedProducts.push(...data.results);
+              } catch (pageError) {
+                consecutiveErrors++;
+                console.error(`❌ Error fetching page ${page} (attempt ${consecutiveErrors}/${maxConsecutiveErrors}):`, pageError.message);
                 
-                // Cache pages 1 to 5
-                if (page >= 1 && page <= 5) {
-                  localStorage.setItem(`${CACHE_KEY}_page${page}`, JSON.stringify(data.results));
-                  localStorage.setItem(`${CACHE_TIMESTAMP_KEY}_page${page}`, Date.now().toString());
+                if (consecutiveErrors < maxConsecutiveErrors) {
+                  // Wait longer before retry (exponential backoff)
+                  const retryDelay = 2000 * consecutiveErrors;
+                  console.log(`⏳ Retrying in ${retryDelay}ms...`);
+                  await new Promise(resolve => setTimeout(resolve, retryDelay));
+                } else {
+                  console.error(`🛑 Too many consecutive errors. Stopped at ${fetchedProducts.length} products`);
+                  hasMore = false;
                 }
-                
-                // Only update if not cancelled
-                if (!isCancelled) {
-                  setAllProducts([...fetchedProducts]);
-                }
-                
-                hasMore = !!data.next;
-                page++;
-              } else {
-                hasMore = false;
               }
             }
+            
+            console.log(`🎯 Final count: ${fetchedProducts.length} products fetched out of ${firstData.count} total`);
+            
           } finally {
             if (!isCancelled) {
               setIsLoadingMore(false);
@@ -210,6 +247,7 @@ function ProductsContent() {
         }
       } catch (err) {
         if (!isCancelled) {
+          console.error('❌ Failed to fetch products:', err);
           setError(err.message || 'Failed to fetch products');
           setLoading(false);
         }
@@ -518,20 +556,20 @@ function ProductsContent() {
                   </svg>
                   Category
                 </label>
-                <div className="relative">
+                <div className="relative group">
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-all appearance-none cursor-pointer"
+                    className="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-4 py-3 pr-10 text-sm text-white focus:outline-none focus:border-emerald-500/50 focus:bg-gray-700/70 hover:bg-gray-700/60 transition-all appearance-none cursor-pointer [&>option]:bg-gray-800 [&>option]:text-white [&>option]:py-2 [&>option:checked]:bg-emerald-500/20 [&>option:checked]:text-emerald-300"
                   >
-                    <option value="">All Categories</option>
+                    <option value="" className="py-2">All Categories</option>
                     {categories.map((category) => (
-                      <option key={category.id} value={category.slug}>
+                      <option key={category.id} value={category.slug} className="py-2">
                         {category.name} ({category.product_count})
                       </option>
                     ))}
                   </select>
-                  <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none group-hover:text-emerald-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
