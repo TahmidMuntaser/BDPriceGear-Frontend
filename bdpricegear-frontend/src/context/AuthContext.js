@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI } from '../services/api';
+import toast from 'react-hot-toast';
 
 const AuthContext = createContext();
 
@@ -72,8 +73,10 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     try {
       await authAPI.logout();
+      toast.success('Logged out successfully. See you soon!');
     } catch (error) {
       console.error('Logout error:', error);
+      toast.error('Logout failed, but you have been signed out locally.');
     } finally {
       setIsLoggedIn(false);
       setUser(null);

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Modal from './Modal';
 import { LogIn, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { authAPI } from '../../services/api';
+import toast from 'react-hot-toast';
 
 export default function LoginModal({ isOpen, onClose, onSwitchToSignup, onLoginSuccess }) {
   const [email, setEmail] = useState('');
@@ -30,6 +31,9 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup, onLoginS
       setEmail('');
       setPassword('');
       
+      // Show success toast
+      toast.success(`Welcome back${response.user?.email ? ', ' + response.user.email.split('@')[0] : ''}!`);
+      
       // Call success callback with user data
       if (onLoginSuccess) {
         onLoginSuccess(response.user);
@@ -38,7 +42,9 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup, onLoginS
       // Close modal
       onClose();
     } catch (err) {
-      setError(err.message || 'Login failed. Please try again.');
+      const errorMessage = err.message || 'Login failed. Please try again.';
+      toast.error(errorMessage);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

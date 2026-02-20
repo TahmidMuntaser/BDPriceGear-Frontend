@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Modal from './Modal';
 import { UserPlus, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { authAPI } from '../../services/api';
+import toast from 'react-hot-toast';
 
 export default function SignupModal({ isOpen, onClose, onSwitchToLogin, onSignupSuccess }) {
   const [formData, setFormData] = useState({
@@ -65,6 +66,9 @@ export default function SignupModal({ isOpen, onClose, onSwitchToLogin, onSignup
           confirmPassword: ''
         });
 
+        // Show success toast
+        toast.success('Account created successfully! Welcome to BDPriceGear!');
+
         // Call success callback with user data
         if (onSignupSuccess) {
           onSignupSuccess(loginResponse.user);
@@ -74,13 +78,16 @@ export default function SignupModal({ isOpen, onClose, onSwitchToLogin, onSignup
         onClose();
       } catch (loginError) {
         // Signup succeeded but auto-login failed, switch to login modal
+        toast.success('Account created! Please login.');
         setError('Account created! Please login.');
         setTimeout(() => {
           handleSwitchToLogin();
         }, 1500);
       }
     } catch (err) {
-      setError(err.message || 'Signup failed. Please try again.');
+      const errorMessage = err.message || 'Signup failed. Please try again.';
+      toast.error(errorMessage);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
