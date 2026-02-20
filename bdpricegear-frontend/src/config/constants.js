@@ -23,4 +23,11 @@ export const API_ENDPOINTS = {
     // Shops endpoints
     SHOPS: `${BASE_URL}/shops/`,
     SHOP_DETAIL: (slug) => `${BASE_URL}/shops/${slug}/`,
+    
+    // Authentication endpoints
+    AUTH_SIGNUP: `${BASE_URL}/auth/signup/`,
+    AUTH_LOGIN: `${BASE_URL}/auth/login/`,
+    AUTH_REFRESH: `${BASE_URL}/auth/refresh/`,
+    AUTH_LOGOUT: `${BASE_URL}/auth/logout/`,
+    AUTH_PROFILE: `${BASE_URL}/auth/profile/`,
 };

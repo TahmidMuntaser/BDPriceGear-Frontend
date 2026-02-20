@@ -43,6 +43,7 @@ export default function Navbar() {
     switchToSignup,
     switchToLogin,
     isMounted,
+    isLoading,
   } = useAuth();
   
   // Clear search term when navigating away from products page or when search query is cleared
@@ -70,7 +71,8 @@ export default function Navbar() {
   };
 
   // Handle successful login/signup
-  const handleAuthSuccess = () => {
+  const handleAuthSuccess = (userData) => {
+    // Update the auth context with the new user data
     checkAuth();
   };
 
@@ -179,7 +181,7 @@ export default function Navbar() {
                   </button>
 
                   {/* Dropdown Menu */}
-                  {isProfileOpen && (
+                  {isProfileOpen && !isLoading && (
                     <div className="absolute right-0 mt-2 w-48 bg-gray-800/95 backdrop-blur-md border border-emerald-500/20 rounded-lg shadow-2xl shadow-emerald-950/50 z-50 overflow-hidden">
                       {isLoggedIn ? (
                         <>

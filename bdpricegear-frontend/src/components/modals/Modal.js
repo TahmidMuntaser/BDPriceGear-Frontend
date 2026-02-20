@@ -1,9 +1,16 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 
 export default function Modal({ isOpen, onClose, children, title, maxWidth = 'max-w-md' }) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Only render on client to avoid hydration errors
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // Close on Escape key
   useEffect(() => {
     const handleEscape = (e) => {
@@ -29,7 +36,8 @@ export default function Modal({ isOpen, onClose, children, title, maxWidth = 'ma
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  // Don't render during SSR or if not open
+  if (!isMounted || !isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">

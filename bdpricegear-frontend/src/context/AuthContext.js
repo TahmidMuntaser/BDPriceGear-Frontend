@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect } from 'react';
+import { authAPI } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -10,6 +11,7 @@ export function AuthProvider({ children }) {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Check auth status on mount
   useEffect(() => {
@@ -17,18 +19,48 @@ export function AuthProvider({ children }) {
     checkAuth();
   }, []);
 
-  const checkAuth = () => {
+  // Listen for auto-logout events (from token expiry)
+  useEffect(() => {
+    const handleAutoLogout = () => {
+      setIsLoggedIn(false);
+      setUser(null);
+    };
+
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('authToken');
-      const userData = localStorage.getItem('user');
-      
-      if (token && userData) {
-        setIsLoggedIn(true);
-        setUser(JSON.parse(userData));
+      window.addEventListener('auth:logout', handleAutoLogout);
+      return () => {
+        window.removeEventListener('auth:logout', handleAutoLogout);
+      };
+    }
+  }, []);
+
+  const checkAuth = async () => {
+    setIsLoading(true);
+    try {
+      if (authAPI.isAuthenticated()) {
+        const storedUser = authAPI.getStoredUser();
+        if (storedUser) {
+          setIsLoggedIn(true);
+          setUser(storedUser);
+        } else {
+          try {
+            const userData = await authAPI.getProfile();
+            setIsLoggedIn(true);
+            setUser(userData);
+          } catch (error) {
+            setIsLoggedIn(false);
+            setUser(null);
+          }
+        }
       } else {
         setIsLoggedIn(false);
         setUser(null);
       }
+    } catch (error) {
+      setIsLoggedIn(false);
+      setUser(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -37,13 +69,15 @@ export function AuthProvider({ children }) {
     setUser(userData);
   };
 
-  const logout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('user');
+  const logout = async () => {
+    try {
+      await authAPI.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setIsLoggedIn(false);
+      setUser(null);
     }
-    setIsLoggedIn(false);
-    setUser(null);
   };
 
   const openLoginModal = () => {
@@ -91,6 +125,7 @@ export function AuthProvider({ children }) {
         switchToSignup,
         switchToLogin,
         isMounted,
+        isLoading,
       }}
     >
       {children}

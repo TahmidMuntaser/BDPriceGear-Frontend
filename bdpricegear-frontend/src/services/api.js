@@ -24,6 +24,56 @@ const retryRequest = async (fn, retries = 2, delay = 1000) => {
   }
 };
 
+// Token management utilities
+const TOKEN_STORAGE_KEY = 'authToken';
+const REFRESH_TOKEN_STORAGE_KEY = 'refreshToken';
+const USER_STORAGE_KEY = 'user';
+
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+const getAccessToken = () => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem(TOKEN_STORAGE_KEY);
+  }
+  return null;
+};
+
+const getRefreshToken = () => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+  }
+  return null;
+};
+
+const setTokens = (accessToken, refreshToken) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(TOKEN_STORAGE_KEY, accessToken);
+    if (refreshToken) {
+      localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, refreshToken);
+    }
+  }
+};
+
+const clearTokens = () => {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
+    localStorage.removeItem(USER_STORAGE_KEY);
+  }
+};
+
 // create axios instance 
 const apiClient = axios.create({
     timeout: 45000,
@@ -37,22 +87,21 @@ const apiClient = axios.create({
 // add req interceptor 
 apiClient.interceptors.request.use(
   (config) => {
-    // console.log('Axios Request:', {
-    //   url: config.url,
-    //   method: config.method,
-    //   headers: config.headers,
-    //   timeout: config.timeout,
-    //   isDirect: !API_CONFIG?.USE_PROXY,
-    // });
+    // Only add auth token to protected endpoints (auth-related routes)
+    const protectedEndpoints = ['/auth/profile', '/auth/logout', '/auth/refresh'];
+    const isProtectedEndpoint = protectedEndpoints.some(endpoint => config.url?.includes(endpoint));
+    
+    if (isProtectedEndpoint) {
+      const token = getAccessToken();
+      if (token && !config.headers.Authorization) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+    
     return config;
   },
 
   (error) => {
-    // console.error('Axios Request Error:', {
-    //   message: error.message,
-    //   code: error.code,
-    //   stack: error.stack,
-    // });
     return Promise.reject(error);
   }
 );
@@ -60,40 +109,284 @@ apiClient.interceptors.request.use(
 // add response interceptor 
 apiClient.interceptors.response.use(
   (response) => {
-    // console.log('Axios Response Success:', {
-    //   status: response.status,
-    //   statusText: response.statusText,
-    //   url: response.config.url,
-    //   dataType: typeof response.data,
-    //   dataKeys: response.data ? Object.keys(response.data) : [],
-    //   hasShops: response.data?.shops ? true : false,
-    //   shopsCount: Array.isArray(response.data?.shops) ? response.data.shops.length : 'Not an array',
-    // });
     return response;
   },
 
-  (error) => {
-    // console.error('Axios Response Error Details:', {
-    //   message: error.message || 'Unknown error',
-    //   code: error.code || 'NO_CODE',
-    //   name: error.name || 'Unknown error type',
-    //   status: error.response?.status || 'No status',
-    //   statusText: error.response?.statusText || 'No status text',
-    //   responseData: error.response?.data || 'No response data',
-    //   requestUrl: error.config?.url || 'Unknown URL',
-    //   requestMethod: error.config?.method || 'Unknown method',
-    //   timeout: error.config?.timeout || 'No timeout',
-    //   isNetworkError: !error.response,
-    //   isTimeoutError: error.code === 'ECONNABORTED',
-    //   isCorsError: error.message?.includes('CORS') || error.message?.includes('Cross-Origin'),
-    //   fullError: error, // Include full error object for debugging
-    // });
+  async (error) => {
+    const originalRequest = error.config;
+    
+    // Only attempt token refresh for protected endpoints
+    const protectedEndpoints = ['/auth/profile', '/auth/logout', '/auth/refresh'];
+    const isProtectedEndpoint = protectedEndpoints.some(endpoint => originalRequest.url?.includes(endpoint));
+    
+    // Handle 401 errors and attempt token refresh ONLY for protected endpoints
+    if (error.response?.status === 401 && !originalRequest._retry && isProtectedEndpoint) {
+      if (isRefreshing) {
+        // If already refreshing, queue this request
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then(token => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return apiClient(originalRequest);
+          })
+          .catch(err => Promise.reject(err));
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      const refreshToken = getRefreshToken();
+      
+      if (!refreshToken) {
+        clearTokens();
+        isRefreshing = false;
+        // Trigger logout event
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('auth:logout'));
+        }
+        return Promise.reject(error);
+      }
+
+      try {
+        const response = await axios.post(API_ENDPOINTS.AUTH_REFRESH, {
+          refresh: refreshToken
+        });
+        
+        const { access } = response.data;
+        setTokens(access, refreshToken);
+        
+        // Update the authorization header
+        originalRequest.headers.Authorization = `Bearer ${access}`;
+        
+        processQueue(null, access);
+        isRefreshing = false;
+        
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        isRefreshing = false;
+        clearTokens();
+        
+        // Trigger logout event
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('auth:logout'));
+        }
+        
+        return Promise.reject(refreshError);
+      }
+    }
+    
     return Promise.reject(error);
   }
 );
 
 
 
+
+// Authentication APIs
+export const authAPI = {
+  // Register new user
+  signup: async (userData) => {
+    try {
+      const response = await apiClient.post(API_ENDPOINTS.AUTH_SIGNUP, userData);
+      return response.data;
+    } catch (error) {
+      if (!error.response) {
+        throw new Error('Cannot connect to server. Please check your connection.');
+      }
+      
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        
+        if (errorData.non_field_errors && Array.isArray(errorData.non_field_errors)) {
+          throw new Error(errorData.non_field_errors.join(', '));
+        }
+        
+        if (errorData.detail) {
+          throw new Error(errorData.detail);
+        }
+        
+        if (typeof errorData === 'object') {
+          const errors = [];
+          for (const [field, messages] of Object.entries(errorData)) {
+            if (Array.isArray(messages)) {
+              errors.push(...messages);
+            } else if (typeof messages === 'string') {
+              errors.push(messages);
+            }
+          }
+          if (errors.length > 0) {
+            throw new Error(errors.join('. '));
+          }
+        }
+      }
+      
+      throw new Error('Signup failed. Please try again.');
+    }
+  },
+
+  // Login and get JWT tokens
+  login: async (credentials) => {
+    try {
+      const response = await apiClient.post(API_ENDPOINTS.AUTH_LOGIN, credentials);
+      const responseData = response.data;
+      
+      if (!responseData) {
+        throw new Error('Server returned empty response');
+      }
+      
+      // Flexible handling of different response formats
+      const access = responseData.access || 
+                     responseData.token || 
+                     responseData.access_token || 
+                     responseData.accessToken ||
+                     responseData.jwt ||
+                     responseData.auth_token;
+                     
+      const refresh = responseData.refresh || 
+                      responseData.refresh_token || 
+                      responseData.refreshToken;
+                      
+      const user = responseData.user || 
+                   responseData.data || 
+                   responseData.profile ||
+                   { email: credentials.email };
+      
+      if (!access) {
+        // If response is a string token
+        if (typeof responseData === 'string') {
+          setTokens(responseData, null);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify({ email: credentials.email }));
+          }
+          return { access: responseData, refresh: null, user: { email: credentials.email } };
+        }
+        
+        // Create fallback for non-standard responses
+        const fallbackToken = 'logged-in-' + Date.now();
+        setTokens(fallbackToken, null);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify({ email: credentials.email, ...responseData }));
+        }
+        return { access: fallbackToken, refresh: null, user: { email: credentials.email, ...responseData } };
+      }
+      
+      // Store tokens and user data
+      setTokens(access, refresh);
+      if (typeof window !== 'undefined' && user) {
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+      }
+      
+      return { access, refresh, user };
+    } catch (error) {
+      if (!error.response) {
+        if (error.request) {
+          throw new Error('Cannot connect to server. Please check your connection.');
+        }
+        throw new Error('Request failed: ' + error.message);
+      }
+      
+      if (error.response?.status === 401 || error.response?.status === 400) {
+        throw new Error('Invalid email or password');
+      }
+      
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        
+        if (errorData.non_field_errors && Array.isArray(errorData.non_field_errors)) {
+          throw new Error(errorData.non_field_errors.join(', '));
+        }
+        
+        if (errorData.detail) {
+          throw new Error(errorData.detail);
+        }
+        
+        if (typeof errorData === 'object') {
+          const errors = [];
+          for (const [field, messages] of Object.entries(errorData)) {
+            if (Array.isArray(messages)) {
+              errors.push(...messages);
+            } else if (typeof messages === 'string') {
+              errors.push(messages);
+            }
+          }
+          if (errors.length > 0) {
+            throw new Error(errors.join('. '));
+          }
+        }
+      }
+      
+      throw new Error('Login failed. Please try again.');
+    }
+  },
+
+  // Refresh access token
+  refreshToken: async () => {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    try {
+      const response = await apiClient.post(API_ENDPOINTS.AUTH_REFRESH, {
+        refresh: refreshToken
+      });
+      const { access } = response.data;
+      setTokens(access, refreshToken);
+      return response.data;
+    } catch (error) {
+      clearTokens();
+      throw new Error('Session expired. Please login again.');
+    }
+  },
+
+  // Logout and blacklist token
+  logout: async () => {
+    const refreshToken = getRefreshToken();
+    
+    try {
+      if (refreshToken) {
+        await apiClient.post(API_ENDPOINTS.AUTH_LOGOUT, {
+          refresh: refreshToken
+        });
+      }
+    } catch (error) {
+      console.error('Logout API error:', error);
+      // Continue with local logout even if API call fails
+    } finally {
+      clearTokens();
+    }
+  },
+
+  // Get user profile (protected)
+  getProfile: async () => {
+    try {
+      const response = await apiClient.get(API_ENDPOINTS.AUTH_PROFILE);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        clearTokens();
+        throw new Error('Unauthorized. Please login again.');
+      }
+      throw new Error('Failed to fetch profile. Please try again.');
+    }
+  },
+
+  // Check if user is authenticated
+  isAuthenticated: () => {
+    return !!getAccessToken();
+  },
+
+  // Get stored user data
+  getStoredUser: () => {
+    if (typeof window !== 'undefined') {
+      const userData = localStorage.getItem(USER_STORAGE_KEY);
+      return userData ? JSON.parse(userData) : null;
+    }
+    return null;
+  },
+};
 
 export const priceComparisonAPI = {
   searchProducts: async (productName) => {
@@ -382,6 +675,9 @@ export const catalogAPI = {
 
 // Export the configured API client for other uses if needed
 export { apiClient };
+
+// Export token management utilities for advanced use cases
+export { getAccessToken, getRefreshToken, setTokens, clearTokens };
 
 // Legacy func
 export const getPriceComparison = async (product) => {

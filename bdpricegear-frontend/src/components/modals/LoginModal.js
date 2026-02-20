@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Modal from './Modal';
 import { LogIn, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { authAPI } from '../../services/api';
 
 export default function LoginModal({ isOpen, onClose, onSwitchToSignup, onLoginSuccess }) {
   const [email, setEmail] = useState('');
@@ -17,31 +18,27 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup, onLoginS
     setIsLoading(true);
 
     try {
-      // For demo purposes - replace with actual API call
-      if (email && password) {
-        // Store auth token and user info
-        localStorage.setItem('authToken', 'demo-token-' + Date.now());
-        localStorage.setItem('user', JSON.stringify({
-          email: email,
-          name: email.split('@')[0]
-        }));
+      const response = await authAPI.login({
+        email: email,
+        password: password,
+      });
 
-        // Reset form
-        setEmail('');
-        setPassword('');
-        
-        // Call success callback
-        if (onLoginSuccess) {
-          onLoginSuccess();
-        }
-        
-        // Close modal
-        onClose();
-      } else {
-        setError('Please enter email and password');
+      // Response contains: { access, refresh, user }
+      // Tokens are automatically stored by authAPI.login
+      
+      // Reset form
+      setEmail('');
+      setPassword('');
+      
+      // Call success callback with user data
+      if (onLoginSuccess) {
+        onLoginSuccess(response.user);
       }
+      
+      // Close modal
+      onClose();
     } catch (err) {
-      setError('Login failed. Please try again.');
+      setError(err.message || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }

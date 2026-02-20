@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import Modal from './Modal';
-import { UserPlus, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { UserPlus, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { authAPI } from '../../services/api';
 
 export default function SignupModal({ isOpen, onClose, onSwitchToLogin, onSignupSuccess }) {
   const [formData, setFormData] = useState({
-    name: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -35,36 +35,52 @@ export default function SignupModal({ isOpen, onClose, onSwitchToLogin, onSignup
       return;
     }
 
+    // Validate password strength (minimum 8 characters)
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      // For demo purposes - replace with actual API call
-      if (formData.name && formData.email && formData.password) {
-        // Store auth token and user info
-        localStorage.setItem('authToken', 'demo-token-' + Date.now());
-        localStorage.setItem('user', JSON.stringify({
+      const signupData = {
+        email: formData.email,
+        password: formData.password,
+        confirm_password: formData.confirmPassword,
+      };
+      
+      await authAPI.signup(signupData);
+
+      // Auto-login after successful signup
+      try {
+        const loginResponse = await authAPI.login({
           email: formData.email,
-          name: formData.name
-        }));
+          password: formData.password,
+        });
 
         // Reset form
         setFormData({
-          name: '',
           email: '',
           password: '',
           confirmPassword: ''
         });
 
-        // Call success callback
+        // Call success callback with user data
         if (onSignupSuccess) {
-          onSignupSuccess();
+          onSignupSuccess(loginResponse.user);
         }
 
         // Close modal
         onClose();
-      } else {
-        setError('Please fill in all fields');
+      } catch (loginError) {
+        // Signup succeeded but auto-login failed, switch to login modal
+        setError('Account created! Please login.');
+        setTimeout(() => {
+          handleSwitchToLogin();
+        }, 1500);
       }
     } catch (err) {
-      setError('Signup failed. Please try again.');
+      setError(err.message || 'Signup failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -72,7 +88,6 @@ export default function SignupModal({ isOpen, onClose, onSwitchToLogin, onSignup
 
   const handleSwitchToLogin = () => {
     setFormData({
-      name: '',
       email: '',
       password: '',
       confirmPassword: ''
@@ -101,26 +116,6 @@ export default function SignupModal({ isOpen, onClose, onSwitchToLogin, onSignup
             {error}
           </div>
         )}
-
-        {/* Name Field */}
-        <div>
-          <label htmlFor="signup-name" className="block text-sm font-medium text-gray-300 mb-2">
-            Full Name
-          </label>
-          <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              id="signup-name"
-              name="name"
-              type="text"
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full pl-11 pr-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-              placeholder="Full Name"
-              required
-            />
-          </div>
-        </div>
 
         {/* Email Field */}
         <div>
