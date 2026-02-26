@@ -18,7 +18,6 @@ const retryRequest = async (fn, retries = 2, delay = 1000) => {
         throw error;
       }
       
-      console.warn(`Retry attempt ${i + 1}/${retries} after ${delay}ms...`);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
@@ -352,7 +351,6 @@ export const authAPI = {
         });
       }
     } catch (error) {
-      console.error('Logout API error:', error);
       // Continue with local logout even if API call fails
     } finally {
       clearTokens();
@@ -394,13 +392,6 @@ export const priceComparisonAPI = {
     const endpoint = API_ENDPOINTS.PRICE_COMPARISON.replace(/\/$/, '');
     const url = `${endpoint}/?product=${encodeURIComponent(productName)}`;
     
-    console.log('Starting API Request:', {
-      url,
-      product: productName,
-      useProxy: API_CONFIG?.USE_PROXY,
-      endpoint: API_ENDPOINTS.PRICE_COMPARISON,
-    });
-    
     const makeRequest = async () => {
       try {
         const requestConfig = {
@@ -412,37 +403,13 @@ export const priceComparisonAPI = {
             'User-Agent': 'BDPriceGear-Frontend/1.0',
           },
         };
-        
-        console.log('Axios Request Config:', requestConfig);
 
         const response = await apiClient(requestConfig);
-        
-        console.log('API Success - Data received:', {
-          status: response.status,
-          hasData: !!response.data,
-          dataStructure: response.data ? Object.keys(response.data) : [],
-          shopsPresent: !!response.data?.shops,
-          shopsCount: Array.isArray(response.data?.shops) ? response.data.shops.length : 'Not array or missing',
-          fullData: response.data,
-        });
         
         return response.data;
       } 
 
       catch (error) {
-        console.error('API Request Failed:', {
-          errorType: error.name,
-          message: error.message,
-          code: error.code,
-          status: error.response?.status,
-          statusText: error.response?.statusText,
-          responseData: error.response?.data,
-          isTimeout: error.code === 'ECONNABORTED',
-          isNetwork: error.code === 'ERR_NETWORK',
-          isCors: error.message?.includes('CORS'),
-          requestUrl: url,
-        });
-        
         //diff types of errors
         if (error.code === 'ECONNABORTED') {
           throw new Error('Request timed out. The backend server might be sleeping and taking longer to respond. Please try again.');
@@ -483,11 +450,6 @@ export const priceComparisonAPI = {
     try {
       return await makeRequest();
     } catch (error) {
-      // console.error('Final error after all retries:', {
-      //   message: error.message,
-      //   originalError: error,
-      // });
-      
       // Create a user-friendly error message
       let userMessage = 'Unable to fetch price comparison data. ';
       
@@ -518,6 +480,22 @@ export const priceComparisonAPI = {
 
 // Product Catalog APIs
 export const catalogAPI = {
+  // Get popular products (one from each category)
+  getPopularProducts: async () => {
+    const url = API_ENDPOINTS.POPULAR_PRODUCTS;
+    
+    const makeRequest = async () => {
+      const response = await apiClient.get(url, { timeout: 10000 });
+      return response.data;
+    };
+    
+    try {
+      return await retryRequest(makeRequest, 2, 1000);
+    } catch (error) {
+      throw new Error(`Failed to fetch popular products: ${error.message}`);
+    }
+  },
+
   // Get ALL products at once (full catalog)
   getAllProducts: async (filters = {}) => {
     let url = `${API_ENDPOINTS.PRODUCTS}?page_size=all`;
@@ -530,14 +508,8 @@ export const catalogAPI = {
       url += `&shop=${encodeURIComponent(filters.shop)}`;
     }
     
-    console.log('🔍 Fetching ALL products URL:', url);
-    
     const makeRequest = async () => {
       const response = await apiClient.get(url, { timeout: 90000 }); // 90 seconds for large dataset
-      console.log('✅ All Products Response:', {
-        count: response.data.count || response.data.length,
-        resultsLength: response.data.results?.length || response.data.length
-      });
       // Handle both paginated and non-paginated response formats
       if (response.data.results) {
         return response.data.results;
@@ -564,17 +536,8 @@ export const catalogAPI = {
       url += `&shop=${encodeURIComponent(filters.shop)}`;
     }
     
-    console.log('🔍 API Request URL:', url);
-    console.log('📦 Filters received:', JSON.stringify(filters));
-    
     const makeRequest = async () => {
       const response = await apiClient.get(url);
-      console.log('✅ API Response:', {
-        count: response.data.count,
-        resultsLength: response.data.results?.length,
-        hasNext: !!response.data.next,
-        hasPrevious: !!response.data.previous
-      });
       return response.data;
     };
     
@@ -583,7 +546,6 @@ export const catalogAPI = {
     } catch (error) {
       // Handle 404 specifically - return empty results instead of throwing
       if (error.response?.status === 404 || error.message?.includes('404')) {
-        console.log('⚠️ Page not found (404), returning empty results');
         return {
           results: [],
           count: 0,

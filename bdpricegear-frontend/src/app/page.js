@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import SearchForm from '../components/SearchForm';
-import ProductGrid from '../components/ProductGrid';
 import { useCategories } from '../hooks/useCategories';
 import { useShops } from '../hooks/useShops';
 import { catalogAPI } from '../services/api';
@@ -14,88 +13,35 @@ import { TrendingUp, Zap, Shield, Clock, ArrowRight, Search, Tag, Store, Shoppin
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [allProducts, setAllProducts] = useState([]);
-  const [displayedProducts, setDisplayedProducts] = useState([]);
+  const [popularProducts, setPopularProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(true);
   const [productsError, setProductsError] = useState(null);
-  const [visibleCount, setVisibleCount] = useState(24); // Show 24 products initially
-  const [sortBy, setSortBy] = useState('default'); // default, price-low, price-high, name
-  const [filterCategory, setFilterCategory] = useState('all');
   const router = useRouter();
 
   // Fetch data using hooks - with delay to avoid rate limiting
   const { categories, loading: categoriesLoading } = useCategories();
   const { shops, loading: shopsLoading } = useShops();
 
-  // Fetch all products on mount with a delay to stagger API calls
+  // Fetch popular products on mount
   useEffect(() => {
-    const fetchAllProducts = async () => {
+    const fetchPopularProducts = async () => {
       try {
         setProductsLoading(true);
         setProductsError(null);
         
-        // Add a 300ms delay to stagger API calls and avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        const products = await catalogAPI.getAllProducts();
-        setAllProducts(products);
-        setDisplayedProducts(products.slice(0, 24)); // Initially show 24
+        const products = await catalogAPI.getPopularProducts();
+        setPopularProducts(products);
       } catch (error) {
-        console.error('Failed to fetch all products:', error);
         setProductsError(error.message);
       } finally {
         setProductsLoading(false);
       }
     };
 
-    fetchAllProducts();
+    fetchPopularProducts();
   }, []);
 
-  // Update displayed products when visibleCount changes
-  useEffect(() => {
-    let filteredProducts = [...allProducts];
-    
-    // Apply category filter
-    if (filterCategory !== 'all') {
-      filteredProducts = filteredProducts.filter(
-        product => product.category_name === filterCategory || product.category_slug === filterCategory
-      );
-    }
-    
-    // Apply sorting
-    switch (sortBy) {
-      case 'price-low':
-        filteredProducts.sort((a, b) => {
-          const priceA = parseFloat(a.current_price || a.price || 0);
-          const priceB = parseFloat(b.current_price || b.price || 0);
-          return priceA - priceB;
-        });
-        break;
-      case 'price-high':
-        filteredProducts.sort((a, b) => {
-          const priceA = parseFloat(a.current_price || a.price || 0);
-          const priceB = parseFloat(b.current_price || b.price || 0);
-          return priceB - priceA;
-        });
-        break;
-      case 'name':
-        filteredProducts.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      default:
-        // Keep default order
-        break;
-    }
-    
-    setDisplayedProducts(filteredProducts.slice(0, visibleCount));
-  }, [visibleCount, allProducts, sortBy, filterCategory]);
 
-  const loadMore = () => {
-    setVisibleCount(prev => Math.min(prev + 24, allProducts.length));
-  };
-
-  const showAll = () => {
-    setVisibleCount(allProducts.length);
-  };
 
   const handleSearch = () => {
     if (searchTerm.trim()) {
@@ -434,127 +380,31 @@ export default function Home() {
           </div>
         )}
 
-        {/* Full Product Catalog Section */}
+        {/* Popular Products Section */}
         <div className="mb-16">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
             <div>
               <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2">
-                Full <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Catalog</span>
+                Popular <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Products</span>
               </h2>
-              <div className="flex items-center gap-2 text-gray-400">
-                <Package className="w-5 h-5 text-emerald-400" />
-                <span className="text-sm">
-                  Showing {displayedProducts.length} of {allProducts.length} products
-                </span>
-              </div>
+              <p className="text-gray-400 text-sm">Handpicked tech essentials from top categories</p>
             </div>
             
-            {/* Filter and Sort Controls */}
-            {!productsLoading && allProducts.length > 0 && (
-              <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                {/* Category Filter */}
-                <select
-                  value={filterCategory}
-                  onChange={(e) => {
-                    setFilterCategory(e.target.value);
-                    setVisibleCount(24); // Reset to initial count when filtering
-                  }}
-                  className="px-4 py-2.5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-400/50 hover:bg-white/15 transition-all cursor-pointer"
-                >
-                  <option value="all" className="bg-gray-900">All Categories</option>
-                  {categories && categories.map((category) => (
-                    <option key={category.id} value={category.slug} className="bg-gray-900">
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-                
-                {/* Sort Dropdown */}
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="px-4 py-2.5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-400/50 hover:bg-white/15 transition-all cursor-pointer"
-                >
-                  <option value="default" className="bg-gray-900">Default Order</option>
-                  <option value="price-low" className="bg-gray-900">Price: Low to High</option>
-                  <option value="price-high" className="bg-gray-900">Price: High to Low</option>
-                  <option value="name" className="bg-gray-900">Name: A to Z</option>
-                </select>
-                
-                {/* Reset Filters */}
-                {(filterCategory !== 'all' || sortBy !== 'default') && (
-                  <button
-                    onClick={() => {
-                      setFilterCategory('all');
-                      setSortBy('default');
-                      setVisibleCount(24);
-                    }}
-                    className="px-4 py-2.5 bg-red-500/20 border border-red-400/30 text-red-300 rounded-xl text-sm font-semibold hover:bg-red-500/30 transition-all"
-                  >
-                    Reset
-                  </button>
-                )}
-              </div>
-            )}
+            <Link 
+              href="/products"
+              className="text-emerald-400 hover:text-emerald-300 flex items-center gap-2 group font-semibold"
+            >
+              View All Products
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
           </div>
           
-          {/* Featured Products Banner */}
-          {!productsLoading && allProducts.length > 0 && (
-            <div className="mb-8 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 backdrop-blur-xl border border-emerald-400/30 rounded-2xl p-6 sm:p-8">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
-                    <Zap className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white">Featured Products</h3>
-                    <p className="text-sm text-gray-400">Handpicked deals for you</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Featured Products Grid - Show first 4 products */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {allProducts.slice(0, 4).map((product, index) => (
-                  <Link
-                    key={product.id || index}
-                    href={`/products/${product.id}`}
-                    className="group relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:border-emerald-400/50"
-                  >
-                    <div className="absolute -top-2 -right-2 z-10">
-                      <span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg">
-                        Featured
-                      </span>
-                    </div>
-                    {product.image_url && (
-                      <div className="mb-3 overflow-hidden rounded-lg">
-                        <Image
-                          src={product.image_url}
-                          alt={product.name}
-                          width={200}
-                          height={200}
-                          className="w-full h-24 sm:h-32 object-cover group-hover:scale-110 transition-transform duration-300"
-                        />
-                      </div>
-                    )}
-                    <h4 className="text-xs sm:text-sm font-semibold text-white mb-2 line-clamp-2 min-h-[2.5rem]">
-                      {product.name}
-                    </h4>
-                    <p className="text-lg font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
-                      ৳{parseFloat(product.current_price || product.price || 0).toLocaleString('en-BD')}
-                    </p>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {/* Products Grid */}
+          {/* Popular Products Grid */}
           {productsLoading ? (
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-12">
               <div className="flex flex-col items-center justify-center">
                 <div className="w-16 h-16 border-4 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin mb-4"></div>
-                <p className="text-gray-400 text-lg">Loading full catalog...</p>
+                <p className="text-gray-400 text-lg">Loading popular products...</p>
               </div>
             </div>
           ) : productsError ? (
@@ -567,43 +417,67 @@ export default function Home() {
                 Try Again
               </button>
             </div>
-          ) : displayedProducts.length > 0 ? (
+          ) : popularProducts.length > 0 ? (
             <>
-              <ProductGrid products={displayedProducts} />
+              {/* Product Cards Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 sm:gap-6">
+                {popularProducts.slice(0, 6).map((product, index) => (
+                    <Link
+                      key={product.id || index}
+                      href={`/products/${product.id}`}
+                      className="group relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-5 hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-emerald-500/20 hover:border-emerald-400/50"
+                    >
+                      {/* Glow effect */}
+                      <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                      
+                      <div className="relative">
+                        {/* Product Image */}
+                        {product.image_url && (
+                          <div className="mb-3 overflow-hidden rounded-xl bg-white/5 aspect-square">
+                            <Image
+                              src={product.image_url}
+                              alt={product.name}
+                              width={300}
+                              height={300}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Category Badge */}
+                        <div className="mb-2">
+                          <span className="inline-block text-[10px] sm:text-xs px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded-md font-semibold uppercase">
+                            {product.category_name || 'Product'}
+                          </span>
+                        </div>
+                        
+                        {/* Product Name */}
+                        <h4 className="text-sm font-semibold text-white mb-2 line-clamp-2 min-h-[2.5rem] group-hover:text-emerald-300 transition-colors">
+                          {product.name}
+                        </h4>
+                        
+                        {/* Price */}
+                        <div className="flex items-center justify-between">
+                          <p className="text-lg font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+                            ৳{parseFloat(product.current_price || product.price || 0).toLocaleString('en-BD')}
+                          </p>
+                          <ArrowRight className="w-4 h-4 text-emerald-400 opacity-0 group-hover:opacity-100 transform translate-x-0 group-hover:translate-x-1 transition-all duration-300" />
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+              </div>
               
-              {/* Load More / Show All Buttons */}
-              {visibleCount < allProducts.length && (
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
-                  <button
-                    onClick={loadMore}
-                    className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 shadow-lg hover:shadow-emerald-500/50 hover:scale-105 flex items-center justify-center gap-2"
-                  >
-                    Load More
-                    <span className="px-2 py-0.5 bg-white/20 rounded-full text-xs">
-                      +{Math.min(24, allProducts.length - visibleCount)}
-                    </span>
-                  </button>
-                  <button
-                    onClick={showAll}
-                    className="w-full sm:w-auto px-8 py-3 bg-white/10 border border-white/20 text-white rounded-xl font-semibold hover:bg-white/20 transition-all duration-300 flex items-center justify-center gap-2"
-                  >
-                    Show All
-                    <span className="px-2 py-0.5 bg-emerald-500/20 rounded-full text-xs">
-                      {allProducts.length - visibleCount} more
-                    </span>
-                  </button>
-                </div>
-              )}
-              
-              {/* All Products Loaded Message */}
-              {visibleCount >= allProducts.length && (
-                <div className="text-center mt-8">
-                  <div className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500/10 border border-emerald-400/30 rounded-xl text-emerald-300">
-                    <Shield className="w-5 h-5" />
-                    <span className="font-semibold">You&apos;ve viewed all products!</span>
-                  </div>
-                </div>
-              )}
+              {/* View All Button */}
+              <div className="mt-8 text-center">
+                <Link
+                  href="/products"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-8 py-3 rounded-xl font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 shadow-lg hover:shadow-emerald-500/50 hover:scale-105"
+                >
+                  Explore All Products
+                  <Package className="w-5 h-5" />
+                </Link>
+              </div>
             </>
           ) : (
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-12 text-center">
@@ -611,16 +485,7 @@ export default function Home() {
                 <Package className="w-8 h-8 text-gray-400" />
               </div>
               <p className="text-gray-400 text-lg mb-2">No products found</p>
-              <p className="text-gray-500 text-sm mb-6">Try adjusting your filters or check back later</p>
-              <button
-                onClick={() => {
-                  setFilterCategory('all');
-                  setSortBy('default');
-                }}
-                className="px-6 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
-              >
-                Reset Filters
-              </button>
+              <p className="text-gray-500 text-sm">Check back later for amazing deals</p>
             </div>
           )}
         </div>
@@ -632,7 +497,7 @@ export default function Home() {
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               <div className="relative">
                 <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent mb-2">
-                  {allProducts.length > 0 ? allProducts.length.toLocaleString() + '+' : '10,000+'}
+                  10,000+
                 </div>
                 <div className="text-gray-400 text-sm sm:text-base">Products Tracked</div>
               </div>
