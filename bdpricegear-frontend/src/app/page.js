@@ -8,7 +8,7 @@ import SearchForm from '../components/SearchForm';
 import { useCategories } from '../hooks/useCategories';
 import { useShops } from '../hooks/useShops';
 import { catalogAPI } from '../services/api';
-import { TrendingUp, Zap, Shield, Clock, ArrowRight, Search, Tag, Store, ShoppingBag, Package } from 'lucide-react';
+import { ArrowRight, Store, Package } from 'lucide-react';
 
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -87,22 +87,18 @@ export default function Home() {
 
   const features = [
     {
-      icon: <Zap className="w-6 h-6" />,
       title: "Real-Time Comparison",
       description: "Get instant price updates from all major stores"
     },
     {
-      icon: <TrendingUp className="w-6 h-6" />,
       title: "Best Deals",
       description: "Find the lowest prices across Bangladesh"
     },
     {
-      icon: <Shield className="w-6 h-6" />,
       title: "Trusted Stores",
       description: "Compare prices from verified retailers only"
     },
     {
-      icon: <Clock className="w-6 h-6" />,
       title: "Save Time",
       description: "No need to browse multiple websites"
     }
@@ -112,66 +108,58 @@ export default function Home() {
     {
       step: "1",
       title: "Search Product",
-      description: "Enter the product name you want to buy",
-      icon: <Search className="w-8 h-8" />
+      description: "Enter the product name you want to buy"
     },
     {
       step: "2",
       title: "Compare Prices",
-      description: "View prices from all major stores instantly",
-      icon: <Tag className="w-8 h-8" />
+      description: "View prices from all major stores instantly"
     },
     {
       step: "3",
       title: "Save Money",
-      description: "Choose the best deal and shop smart",
-      icon: <ShoppingBag className="w-8 h-8" />
+      description: "Choose the best deal and shop smart"
     }
   ];
 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-slate-950 via-gray-950 to-black relative overflow-hidden transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
       
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-[0.15]">
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'linear-gradient(rgba(16, 185, 129, 0.1) 2px, transparent 2px), linear-gradient(90deg, rgba(16, 185, 129, 0.1) 2px, transparent 2px)',
-          backgroundSize: '60px 60px'
-        }}></div>
-      </div>
+      {/* Background — subtle dot grid */}
+      <div className="absolute inset-0 opacity-[0.07]" style={{
+        backgroundImage: 'radial-gradient(rgba(16, 185, 129, 0.8) 1px, transparent 1px)',
+        backgroundSize: '32px 32px'
+      }}></div>
 
-      {/* Animated Glow Effects */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl animate-pulse"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      {/* Soft ambient glow — no animation */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[160px] pointer-events-none"></div>
 
-      <div className="relative max-w-7xl mx-auto px-4 py-12 sm:py-20">
+      <div className="relative max-w-7xl mx-auto px-4 py-16 sm:py-24">
         {/* Hero Section */}
-        <div className="text-center mb-12 sm:mb-16">
-          {/* Logo/Brand */}
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-2xl shadow-emerald-500/30">
-                <TrendingUp className="w-8 h-8 text-white" />
-              </div>
-              <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-emerald-400 rounded-tr-lg"></div>
-              <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-emerald-400 rounded-bl-lg"></div>
-            </div>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold">
-              <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300 bg-clip-text text-transparent">
-                BDPriceGear
-              </span>
-            </h1>
+        <div className="text-center mb-14 sm:mb-20">
+          {/* Tagline chip */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-8 rounded-full border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 text-xs font-mono tracking-widest uppercase">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            Bangladesh&apos;s Price Intelligence
           </div>
 
-          <p className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-4">
-            Compare <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Save</span> ShopSmart
+          {/* Brand */}
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-5">
+            <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300 bg-clip-text text-transparent">
+              BDPriceGear
+            </span>
+          </h1>
+
+          {/* Headline */}
+          <p className="text-xl sm:text-2xl md:text-3xl font-semibold text-white/90 mb-3 tracking-tight">
+            Compare prices. Save money. Shop smarter.
           </p>
-          <p className="text-gray-400 text-base sm:text-lg max-w-2xl mx-auto mb-12">
-            Find the best prices across Bangladesh&apos;s top e-commerce stores in seconds. Save money on every purchase.
+          <p className="text-gray-500 text-base sm:text-lg max-w-xl mx-auto mb-10 leading-relaxed">
+            Search any product and instantly see the best prices across Bangladesh&apos;s top tech retailers - all in one place.
           </p>
 
           {/* Search Section */}
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-2xl mx-auto">
             <SearchForm 
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
@@ -183,23 +171,56 @@ export default function Home() {
         </div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-          {features.map((feature, index) => (
-            <div 
-              key={index}
-              className="group relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-emerald-500/20"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              
-              <div className="relative">
-                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 rounded-xl flex items-center justify-center mb-4 text-emerald-400 group-hover:scale-110 transition-transform duration-300">
-                  {feature.icon}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-16">
+          {features.map((feature, index) => {
+            const accents = [
+              'from-emerald-500 to-teal-500',
+              'from-teal-500 to-cyan-500',
+              'from-cyan-500 to-sky-500',
+              'from-sky-500 to-indigo-500',
+            ];
+            const glows = [
+              'group-hover:shadow-emerald-500/10',
+              'group-hover:shadow-teal-500/10',
+              'group-hover:shadow-cyan-500/10',
+              'group-hover:shadow-sky-500/10',
+            ];
+            return (
+              <div
+                key={index}
+                className={`group relative bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden hover:border-white/[0.12] transition-all duration-300 hover:shadow-xl ${glows[index]}`}
+              >
+                {/* Top accent bar */}
+                <div className={`h-[2px] w-full bg-gradient-to-r ${accents[index]}`}></div>
+
+                <div className="p-6">
+                  {/* Index + status dot */}
+                  <div className="flex items-center justify-between mb-5">
+                    <span className="text-[10px] font-mono text-white/20 tracking-[0.2em]">
+                      SYS.{String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${accents[index]}`}></span>
+                      <span className="text-[10px] font-mono text-white/20 tracking-wider">ACTIVE</span>
+                    </span>
+                  </div>
+
+                  {/* Title */}
+                  <h3 className="text-lg font-bold text-white mb-2 tracking-tight leading-snug">
+                    {feature.title}
+                  </h3>
+
+                  {/* Description */}
+                  <p className="text-base text-gray-500 leading-relaxed">
+                    {feature.description}
+                  </p>
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2">{feature.title}</h3>
-                <p className="text-sm text-gray-400">{feature.description}</p>
+
+                {/* Corner bracket bottom-right */}
+                <div className="absolute bottom-3 right-3 w-3 h-3 border-b border-r border-white/[0.08]"></div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Popular Categories Section */}
@@ -367,11 +388,6 @@ export default function Home() {
                         {/* Step badge */}
                         <div className={`flex-shrink-0 w-12 h-12 rounded-lg ${c.bg} border ${c.border} flex items-center justify-center`}>
                           <span className={`text-xl font-black font-mono ${c.text}`}>0{item.step}</span>
-                        </div>
-
-                        {/* Icon */}
-                        <div className={`w-10 h-10 rounded-lg ${c.bg} border ${c.border} flex items-center justify-center ${c.text}`}>
-                          {item.icon}
                         </div>
 
                         {/* Step label */}

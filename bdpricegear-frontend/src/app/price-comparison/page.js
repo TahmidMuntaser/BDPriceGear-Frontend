@@ -8,6 +8,7 @@ import ProductGrid from '@/components/ProductGrid';
 import Pagination from '@/components/Pagination';
 import Link from 'next/link';
 import { SlidersHorizontal, X } from 'lucide-react';
+import Breadcrumb from '@/components/Breadcrumb';
 
 function PriceComparisonContent() {
   const searchParams = useSearchParams();
@@ -266,15 +267,10 @@ function PriceComparisonContent() {
 
       <div className="relative max-w-7xl mx-auto px-4 py-6 sm:py-8">
         {/* Breadcrumb */}
-        <nav className="mb-6 flex items-center gap-2 text-sm">
-          <Link href="/" className="text-emerald-400 hover:text-emerald-300 transition-colors">
-            Home
-          </Link>
-          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-          <span className="text-gray-400">Price Comparison</span>
-        </nav>
+        <Breadcrumb items={[
+          { label: 'Home', href: '/', icon: 'home' },
+          { label: 'Price Comparison' }
+        ]} />
 
         {/* Header */}
         <div className="mb-8 sm:mb-10">
