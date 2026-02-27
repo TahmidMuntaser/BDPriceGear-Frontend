@@ -76,61 +76,40 @@ function ProductsContent() {
           productsData = firstData.products;
         }
         
-        // Only update if not cancelled
+        // Show first page immediately
         if (!isCancelled) {
           setAllProducts(productsData);
           setLoading(false);
         }
         
-        // Continue fetching remaining pages in background if there's more data
-        if (firstData.next && !isCancelled) {
+        // Fetch ALL remaining pages in parallel
+        if (firstData.next && productsData.length > 0 && !isCancelled) {
           setIsLoadingMore(true);
-          const fetchedProducts = [...productsData];
-          let page = 2;
-          let hasMore = !!firstData.next;
+          const perPage = productsData.length;
+          const totalPages = Math.ceil((firstData.count || 0) / perPage);
           
-          try {
-            while (hasMore && !isCancelled) {
-              const url = `${baseUrl}/products/?product=${encodeURIComponent(searchQuery)}&page=${page}`;
-              const response = await fetch(url);
-              
-              if (!response.ok) {
-                if (response.status === 404) {
-                  hasMore = false;
-                  break;
-                }
-                throw new Error(`HTTP error! status: ${response.status}`);
-              }
-              
-              const data = await response.json();
-              let pageProducts = [];
-              
-              if (Array.isArray(data)) {
-                pageProducts = data;
-              } else if (data?.results && Array.isArray(data.results)) {
-                pageProducts = data.results;
-              } else if (data?.products && Array.isArray(data.products)) {
-                pageProducts = data.products;
-              }
-              
-              if (pageProducts.length > 0) {
-                fetchedProducts.push(...pageProducts);
-                
-                // Only update if not cancelled
-                if (!isCancelled) {
-                  setAllProducts([...fetchedProducts]);
-                }
-                
-                hasMore = !!data.next;
-                page++;
-              } else {
-                hasMore = false;
-              }
-            }
-          } finally {
-            if (!isCancelled) {
-              setIsLoadingMore(false);
-            }
+          const promises = [];
+          for (let p = 2; p <= totalPages; p++) {
+            promises.push(
+              fetch(`${baseUrl}/products/?product=${encodeURIComponent(searchQuery)}&page=${p}`)
+                .then(r => r.ok ? r.json() : null)
+                .catch(() => null)
+            );
+          }
+          
+          const results = await Promise.all(promises);
+          const allProducts = [...productsData];
+          results.forEach(data => {
+            let pageProducts = [];
+            if (Array.isArray(data)) pageProducts = data;
+            else if (data?.results?.length) pageProducts = data.results;
+            else if (data?.products?.length) pageProducts = data.products;
+            if (pageProducts.length) allProducts.push(...pageProducts);
+          });
+          
+          if (!isCancelled) {
+            setAllProducts(allProducts);
+            setIsLoadingMore(false);
           }
         }
       } catch (err) {
@@ -141,110 +120,117 @@ function ProductsContent() {
       }
     };
 
+    const BROWSER_CACHE_NAME = 'bdpricegear-products';
+
     const fetchAllProducts = async () => {
-      setAllProducts([]);
       setLoading(true);
       setError(null);
-      
+
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://bdpricegear-backend.onrender.com/api';
+      const url = `${baseUrl}/products/?page_size=10000`;
+
+      // ── Try loading from browser Cache API first ──
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://bdpricegear-backend.onrender.com/api';
-        
-        // Use larger page size to reduce number of requests needed
-        const pageSize = 200;
-        const firstResponse = await fetch(`${baseUrl}/products/?page=1&page_size=${pageSize}`);
-        if (!firstResponse.ok) {
-          throw new Error(`HTTP error! status: ${firstResponse.status}`);
-        }
-        const firstData = await firstResponse.json();
-        
-        console.log(`📊 Total products available: ${firstData.count}`);
-        console.log(`📄 Page 1 fetched: ${firstData.results?.length || 0} products`);
-        
-        // Only update if not cancelled
-        if (!isCancelled) {
-          setAllProducts(firstData.results);
-          setLoading(false);
-        }
-        
-        // Continue fetching remaining pages in background
-        if (firstData.next && !isCancelled) {
-          setIsLoadingMore(true);
-          const fetchedProducts = [...firstData.results];
-          let page = 2;
-          let hasMore = !!firstData.next;
-          let consecutiveErrors = 0;
-          const maxConsecutiveErrors = 3;
-          
-          try {
-            while (hasMore && !isCancelled && consecutiveErrors < maxConsecutiveErrors) {
-              const url = `${baseUrl}/products/?page=${page}&page_size=${pageSize}`;
-              
-              try {
-                // Add small delay between requests to avoid overwhelming the backend
-                if (page > 2) {
-                  await new Promise(resolve => setTimeout(resolve, 100));
-                }
-                
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                  if (response.status === 404) {
-                    console.log(`📭 Page ${page} not found (end of data)`);
-                    hasMore = false;
-                    break;
-                  }
-                  throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.results && data.results.length > 0) {
-                  fetchedProducts.push(...data.results);
-                  consecutiveErrors = 0; // Reset error counter on success
-                  
-                  console.log(`✅ Page ${page} fetched: ${data.results.length} products (Total: ${fetchedProducts.length}/${firstData.count})`);
-                  
-                  // Cache pages 1 to 5
-                  if (page >= 1 && page <= 5) {
-                    localStorage.setItem(`${CACHE_KEY}_page${page}`, JSON.stringify(data.results));
-                    localStorage.setItem(`${CACHE_TIMESTAMP_KEY}_page${page}`, Date.now().toString());
-                  }
-                  
-                  // Only update if not cancelled
-                  if (!isCancelled) {
-                    setAllProducts([...fetchedProducts]);
-                  }
-                  
-                  hasMore = !!data.next;
-                  page++;
-                } else {
-                  console.log(`⚠️ Page ${page} returned no results`);
-                  hasMore = false;
-                }
-              } catch (pageError) {
-                consecutiveErrors++;
-                console.error(`❌ Error fetching page ${page} (attempt ${consecutiveErrors}/${maxConsecutiveErrors}):`, pageError.message);
-                
-                if (consecutiveErrors < maxConsecutiveErrors) {
-                  // Wait longer before retry (exponential backoff)
-                  const retryDelay = 2000 * consecutiveErrors;
-                  console.log(`⏳ Retrying in ${retryDelay}ms...`);
-                  await new Promise(resolve => setTimeout(resolve, retryDelay));
-                } else {
-                  console.error(`🛑 Too many consecutive errors. Stopped at ${fetchedProducts.length} products`);
-                  hasMore = false;
-                }
+        if ('caches' in window) {
+          const cache = await caches.open(BROWSER_CACHE_NAME);
+          const cachedResponse = await cache.match(url);
+          if (cachedResponse) {
+            // Check if cache is still fresh (30 min)
+            const cachedTime = cachedResponse.headers.get('x-cached-at');
+            if (cachedTime && (Date.now() - parseInt(cachedTime)) < CACHE_DURATION) {
+              const data = await cachedResponse.json();
+              let products = Array.isArray(data) ? data : (data?.results || []);
+              if (products.length > 0 && !isCancelled) {
+                console.log(`⚡ Loaded ${products.length} products from browser cache`);
+                setAllProducts(products);
+                setLoading(false);
+                return;
               }
-            }
-            
-            console.log(`🎯 Final count: ${fetchedProducts.length} products fetched out of ${firstData.count} total`);
-            
-          } finally {
-            if (!isCancelled) {
-              setIsLoadingMore(false);
             }
           }
         }
+      } catch {
+        // Cache read failed, fall through to network
+      }
+
+      // ── No valid cache — fetch from network ──
+      setAllProducts([]);
+      
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Clone response before reading body (so we can cache the original)
+        const responseClone = response.clone();
+        const data = await response.json();
+        
+        let allProducts = [];
+        if (Array.isArray(data)) {
+          allProducts = data;
+        } else if (data?.results) {
+          allProducts = data.results;
+        }
+        
+        console.log(`🎯 Fetched ${allProducts.length} products from network`);
+        
+        if (!isCancelled) {
+          setAllProducts(allProducts);
+          setLoading(false);
+        }
+        
+        // If backend capped the page_size and there's more, fetch remaining in parallel
+        if (data?.next && allProducts.length > 0 && !isCancelled) {
+          setIsLoadingMore(true);
+          const perPage = allProducts.length;
+          const totalPages = Math.ceil((data.count || 0) / perPage);
+          
+          const promises = [];
+          for (let p = 2; p <= totalPages; p++) {
+            promises.push(
+              fetch(`${baseUrl}/products/?page=${p}&page_size=${perPage}`)
+                .then(r => r.ok ? r.json() : null)
+                .catch(() => null)
+            );
+          }
+          const results = await Promise.all(promises);
+          const combined = [...allProducts];
+          results.forEach(d => {
+            if (d?.results?.length) combined.push(...d.results);
+          });
+          
+          if (!isCancelled) {
+            allProducts = combined;
+            setAllProducts(combined);
+            setIsLoadingMore(false);
+          }
+
+          // Cache the combined result as a synthetic response
+          try {
+            if ('caches' in window) {
+              const cache = await caches.open(BROWSER_CACHE_NAME);
+              const syntheticResponse = new Response(JSON.stringify(allProducts), {
+                headers: { 'Content-Type': 'application/json', 'x-cached-at': Date.now().toString() }
+              });
+              await cache.put(url, syntheticResponse);
+            }
+          } catch { /* ignore */ }
+        } else {
+          // Cache the single-page response
+          try {
+            if ('caches' in window) {
+              const cache = await caches.open(BROWSER_CACHE_NAME);
+              // Store with a timestamp header so we can check freshness
+              const body = await responseClone.text();
+              const syntheticResponse = new Response(body, {
+                headers: { 'Content-Type': 'application/json', 'x-cached-at': Date.now().toString() }
+              });
+              await cache.put(url, syntheticResponse);
+            }
+          } catch { /* ignore */ }
+        }
+
       } catch (err) {
         if (!isCancelled) {
           console.error('❌ Failed to fetch products:', err);
@@ -406,9 +392,18 @@ function ProductsContent() {
     setSortOrder('');
   };
 
-  const handleRefreshCache = () => {
+  const handleRefreshCache = async () => {
+    // Clear browser Cache API
+    try {
+      if ('caches' in window) {
+        await caches.delete('bdpricegear-products');
+      }
+    } catch { /* ignore */ }
+    // Also clear legacy localStorage keys
     localStorage.removeItem('bdpricegear_products_cache');
     localStorage.removeItem('bdpricegear_products_timestamp');
+    setAllProducts([]);
+    setLoading(true);
     window.location.reload();
   };
 

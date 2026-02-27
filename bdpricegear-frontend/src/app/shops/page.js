@@ -3,6 +3,7 @@
 import { useShops } from '@/hooks/useShops';
 import Link from 'next/link';
 import Image from 'next/image';
+import Breadcrumb from '@/components/Breadcrumb';
 
 export default function ShopsPage() {
   const { shops, loading, error, clearError } = useShops();
@@ -26,6 +27,12 @@ export default function ShopsPage() {
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 py-8 sm:py-12">
+        {/* Breadcrumb */}
+        <Breadcrumb items={[
+          { label: 'Home', href: '/', icon: 'home' },
+          { label: 'Shops' }
+        ]} />
+
         {/* Header */}
         <div className="mb-8 sm:mb-12">
           <div className="flex items-center gap-3 mb-4">

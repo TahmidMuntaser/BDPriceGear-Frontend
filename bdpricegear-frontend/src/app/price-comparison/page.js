@@ -207,7 +207,7 @@ function PriceComparisonContent() {
                 Searching across multiple stores...
               </p>
               <p className="text-sm text-gray-500">
-                This may take 1-2 minutes for live data
+                This may take 1 to 3 minutes to fetch live data
               </p>
             </div>
           </div>

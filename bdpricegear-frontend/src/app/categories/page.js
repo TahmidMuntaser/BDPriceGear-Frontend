@@ -4,6 +4,7 @@ import { useCategories } from '@/hooks/useCategories';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Package2, Layers, Grid3x3, Sparkles, TrendingUp, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
+import Breadcrumb from '@/components/Breadcrumb';
 
 export default function CategoriesPage() {
   const { categories, loading, error, clearError } = useCategories();
@@ -106,6 +107,12 @@ export default function CategoriesPage() {
 
       <div className="relative max-w-7xl mx-auto px-4 py-12 sm:py-16">
         
+        {/* Breadcrumb */}
+        <Breadcrumb items={[
+          { label: 'Home', href: '/', icon: 'home' },
+          { label: 'Categories' }
+        ]} />
+
         {/* Header Section */}
         <div className="text-center mb-12 sm:mb-16">
           {/* Enhanced Title with Tech Effect */}
