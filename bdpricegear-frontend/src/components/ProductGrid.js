@@ -62,6 +62,7 @@ export default function ProductGrid({ products, showModal = false }) {
                 width={400}
                 height={300}
                 className="w-full h-32 sm:h-40 md:h-48 object-cover transform transition-transform duration-500 group-hover/card:scale-110"
+                unoptimized
                 onError={(e) => {
                   e.target.style.display = 'none';
                 }}
@@ -182,6 +183,7 @@ export default function ProductGrid({ products, showModal = false }) {
                           width={600}
                           height={600}
                           className="w-full h-auto object-contain rounded-lg"
+                          unoptimized
                           onError={(e) => {
                             e.target.src = '/placeholder-product.png';
                           }}

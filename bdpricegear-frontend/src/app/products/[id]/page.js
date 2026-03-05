@@ -127,6 +127,7 @@ export default function ProductDetailPage() {
                       width={600}
                       height={600}
                       className="w-full h-auto object-contain"
+                      unoptimized
                       onError={(e) => {
                         e.target.src = '/images/placeholder.png';
                       }}

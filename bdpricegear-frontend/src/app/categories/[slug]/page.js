@@ -124,6 +124,7 @@ export default function CategoryDetailPage() {
                             width={400}
                             height={300}
                             className="w-full h-48 object-cover transform transition-transform duration-500 group-hover/card:scale-110"
+                            unoptimized
                             onError={(e) => {
                               e.target.style.display = 'none';
                             }}

@@ -266,6 +266,7 @@ export default function ShopDetailPage() {
                           width={400}
                           height={400}
                           className="relative z-10 w-full h-full object-contain p-4 transform transition-transform duration-700 group-hover:scale-110 group-hover:rotate-2"
+                          unoptimized
                           onError={(e) => {
                             e.target.style.display = 'none';
                           }}

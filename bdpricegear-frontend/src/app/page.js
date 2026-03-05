@@ -503,6 +503,8 @@ export default function Home() {
                               width={300}
                               height={300}
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              unoptimized
+                              onError={(e) => { e.currentTarget.style.display = 'none'; }}
                             />
                           </div>
                         )}
