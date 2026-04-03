@@ -58,7 +58,7 @@ function ProductsContent() {
         const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://bdpricegear-backend.onrender.com/api';
         
         // Fetch first page
-        const firstResponse = await fetch(`${baseUrl}/products/?product=${encodeURIComponent(searchQuery)}&page=1`);
+        const firstResponse = await fetch(`${baseUrl}/search/?q=${encodeURIComponent(searchQuery)}&page=1`);
         
         if (!firstResponse.ok) {
           throw new Error(`HTTP error! status: ${firstResponse.status}`);
@@ -91,7 +91,7 @@ function ProductsContent() {
           const promises = [];
           for (let p = 2; p <= totalPages; p++) {
             promises.push(
-              fetch(`${baseUrl}/products/?product=${encodeURIComponent(searchQuery)}&page=${p}`)
+              fetch(`${baseUrl}/search/?q=${encodeURIComponent(searchQuery)}&page=${p}`)
                 .then(r => r.ok ? r.json() : null)
                 .catch(() => null)
             );
