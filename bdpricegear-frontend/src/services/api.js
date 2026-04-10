@@ -572,6 +572,22 @@ export const catalogAPI = {
     }
   },
 
+  // Get recommended alternatives for a catalog product
+  getBestAlternatives: async (id) => {
+    const url = API_ENDPOINTS.PRODUCT_BEST_ALTERNATIVES(id);
+
+    try {
+      const response = await apiClient.get(url);
+      return response.data?.best_alternatives || [];
+    } catch (error) {
+      // Recommendations are optional; return empty when unavailable
+      if (error.response?.status === 404) {
+        return [];
+      }
+      throw new Error(`Failed to fetch product alternatives: ${error.message}`);
+    }
+  },
+
   // Get all categories
   getCategories: async () => {
     const url = API_ENDPOINTS.CATEGORIES;

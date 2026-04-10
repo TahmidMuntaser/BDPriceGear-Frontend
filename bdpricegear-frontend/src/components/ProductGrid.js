@@ -2,10 +2,65 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import ProductRecommendations from './ProductRecommendations';
+import { catalogAPI } from '../services/api';
 
-export default function ProductGrid({ products, showModal = false }) {
+export default function ProductGrid({ products, showModal = false, enableRecommendations = false }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [recommendations, setRecommendations] = useState([]);
+  const [isRecommendationsLoading, setIsRecommendationsLoading] = useState(false);
+  const [recommendationsError, setRecommendationsError] = useState('');
+
+  const getModalStockStatus = (product) => {
+    const rawPrice = product?.current_price ?? product?.price;
+    const parsedPrice = typeof rawPrice === 'string' ? parseFloat(rawPrice) : Number(rawPrice);
+    const isPriceZeroOrInvalid = !Number.isFinite(parsedPrice) || parsedPrice <= 0;
+
+    if (isPriceZeroOrInvalid) {
+      return { label: 'Out of Stock', inStock: false };
+    }
+
+    const rawStatus = (
+      product?.stock_message ||
+      product?.stock_status ||
+      product?.availability ||
+      product?.status ||
+      ''
+    )
+      .toString()
+      .trim();
+
+    if (rawStatus) {
+      const normalized = rawStatus.toLowerCase();
+      const isOut =
+        normalized.includes('out of stock') ||
+        normalized.includes('out-of-stock') ||
+        normalized.includes('not available') ||
+        normalized.includes('unavailable');
+
+      return {
+        label: rawStatus,
+        inStock: !isOut,
+      };
+    }
+
+    if (typeof product?.in_stock === 'boolean') {
+      return {
+        label: product.in_stock ? 'In Stock' : 'Out of Stock',
+        inStock: product.in_stock,
+      };
+    }
+
+    if (typeof product?.is_in_stock === 'boolean') {
+      return {
+        label: product.is_in_stock ? 'In Stock' : 'Out of Stock',
+        inStock: product.is_in_stock,
+      };
+    }
+
+    return { label: 'In Stock', inStock: true };
+  };
 
   if (!products || products.length === 0) {
     return (
@@ -27,7 +82,50 @@ export default function ProductGrid({ products, showModal = false }) {
 
   const closeModal = () => {
     setSelectedProduct(null);
+    setRecommendations([]);
+    setRecommendationsError('');
+    setIsRecommendationsLoading(false);
   };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadRecommendations = async () => {
+      if (!showModal || !enableRecommendations || !selectedProduct?.id) {
+        if (isMounted) {
+          setRecommendations([]);
+          setRecommendationsError('');
+          setIsRecommendationsLoading(false);
+        }
+        return;
+      }
+
+      try {
+        setIsRecommendationsLoading(true);
+        setRecommendationsError('');
+        const data = await catalogAPI.getBestAlternatives(selectedProduct.id);
+
+        if (isMounted) {
+          setRecommendations(Array.isArray(data) ? data : []);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setRecommendations([]);
+          setRecommendationsError('Unable to load recommendations right now.');
+        }
+      } finally {
+        if (isMounted) {
+          setIsRecommendationsLoading(false);
+        }
+      }
+    };
+
+    loadRecommendations();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [showModal, enableRecommendations, selectedProduct]);
 
   const renderProduct = (product, productIndex) => {
     // Support both catalog API format and search API format
@@ -139,6 +237,9 @@ export default function ProductGrid({ products, showModal = false }) {
 
       {/* Modal */}
       {selectedProduct && (
+        (() => {
+          const modalStockStatus = getModalStockStatus(selectedProduct);
+          return (
         <div 
           className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-2"
           onClick={closeModal}
@@ -238,6 +339,35 @@ export default function ProductGrid({ products, showModal = false }) {
                       </div>
                     </div>
 
+                    {/* Stock Card */}
+                    <div className="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-2.5 sm:p-3 md:p-4 hover:border-emerald-500/30 transition-colors">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 border ${
+                          modalStockStatus.inStock
+                            ? 'bg-emerald-500/20 border-emerald-500/40'
+                            : 'bg-red-500/20 border-red-500/40'
+                        }`}>
+                          {modalStockStatus.inStock ? (
+                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-[10px] sm:text-xs font-mono text-gray-400 uppercase tracking-wider">Stock Status</p>
+                          <p className={`text-xs sm:text-sm font-semibold break-words ${
+                            modalStockStatus.inStock ? 'text-emerald-300' : 'text-red-300'
+                          }`}>
+                            {modalStockStatus.label}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Store Card */}
                     {(selectedProduct.shop_name || selectedProduct.storeName) && (
                       <div className="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-2.5 sm:p-3 md:p-4 hover:border-emerald-500/30 transition-colors">
@@ -289,9 +419,19 @@ export default function ProductGrid({ products, showModal = false }) {
                   </div>
                 </div>
               </div>
+
+              {showModal && enableRecommendations && selectedProduct?.id && (
+                <ProductRecommendations
+                  recommendations={recommendations}
+                  isLoading={isRecommendationsLoading}
+                  error={recommendationsError}
+                />
+              )}
             </div>
           </div>
         </div>
+          );
+        })()
       )}
     </>
   );

@@ -15,6 +15,7 @@ export const API_ENDPOINTS = {
     // Product Catalog endpoints
     PRODUCTS: `${BASE_URL}/products/`,
     PRODUCT_DETAIL: (id) => `${BASE_URL}/products/${id}/`,
+    PRODUCT_BEST_ALTERNATIVES: (id) => `${BASE_URL}/products/${id}/best-alternatives/`,
     POPULAR_PRODUCTS: `${BASE_URL}/popular-products/`,
     
     // Categories endpoints
