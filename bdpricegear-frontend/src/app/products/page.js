@@ -141,7 +141,6 @@ function ProductsContent() {
               const data = await cachedResponse.json();
               let products = Array.isArray(data) ? data : (data?.results || []);
               if (products.length > 0 && !isCancelled) {
-                console.log(`⚡ Loaded ${products.length} products from browser cache`);
                 setAllProducts(products);
                 setLoading(false);
                 return;
@@ -172,8 +171,6 @@ function ProductsContent() {
         } else if (data?.results) {
           allProducts = data.results;
         }
-        
-        console.log(`🎯 Fetched ${allProducts.length} products from network`);
         
         if (!isCancelled) {
           setAllProducts(allProducts);

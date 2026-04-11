@@ -8,14 +8,6 @@ import Breadcrumb from '@/components/Breadcrumb';
 export default function ShopsPage() {
   const { shops, loading, error, clearError } = useShops();
 
-  // Debug logging
-  console.log('Shops Page Debug:', {
-    loading,
-    error,
-    shopsLength: shops?.length,
-    shops: shops
-  });
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-gray-950 to-black pt-4">
       {/* Background Pattern */}

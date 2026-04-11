@@ -31,6 +31,27 @@ const USER_STORAGE_KEY = 'user';
 let isRefreshing = false;
 let failedQueue = [];
 
+const TOKEN_PROTECTED_ENDPOINT_HINTS = [
+  '/auth/profile',
+  '/auth/logout',
+  '/auth/refresh',
+  '/wishlist/',
+];
+
+const REFRESHABLE_ENDPOINT_HINTS = [
+  '/auth/profile',
+  '/auth/logout',
+  '/auth/refresh',
+];
+
+const hasProtectedTokenRequest = (url = '') => {
+  return TOKEN_PROTECTED_ENDPOINT_HINTS.some((endpoint) => url.includes(endpoint));
+};
+
+const hasRefreshableRequest = (url = '') => {
+  return REFRESHABLE_ENDPOINT_HINTS.some((endpoint) => url.includes(endpoint));
+};
+
 const processQueue = (error, token = null) => {
   failedQueue.forEach(prom => {
     if (error) {
@@ -86,9 +107,8 @@ const apiClient = axios.create({
 // add req interceptor 
 apiClient.interceptors.request.use(
   (config) => {
-    // Only add auth token to protected endpoints (auth-related routes)
-    const protectedEndpoints = ['/auth/profile', '/auth/logout', '/auth/refresh'];
-    const isProtectedEndpoint = protectedEndpoints.some(endpoint => config.url?.includes(endpoint));
+    // Only add auth token to protected endpoints
+    const isProtectedEndpoint = hasProtectedTokenRequest(config.url || '');
     
     if (isProtectedEndpoint) {
       const token = getAccessToken();
@@ -114,12 +134,11 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
-    // Only attempt token refresh for protected endpoints
-    const protectedEndpoints = ['/auth/profile', '/auth/logout', '/auth/refresh'];
-    const isProtectedEndpoint = protectedEndpoints.some(endpoint => originalRequest.url?.includes(endpoint));
+    // Only attempt token refresh for auth-related endpoints
+    const isRefreshableEndpoint = hasRefreshableRequest(originalRequest.url || '');
     
     // Handle 401 errors and attempt token refresh ONLY for protected endpoints
-    if (error.response?.status === 401 && !originalRequest._retry && isProtectedEndpoint) {
+    if (error.response?.status === 401 && !originalRequest._retry && isRefreshableEndpoint) {
       if (isRefreshing) {
         // If already refreshing, queue this request
         return new Promise((resolve, reject) => {
@@ -236,16 +255,22 @@ export const authAPI = {
       }
       
       // Flexible handling of different response formats
+      const tokenContainer = responseData?.tokens || responseData?.data?.tokens || responseData?.data;
       const access = responseData.access || 
                      responseData.token || 
                      responseData.access_token || 
                      responseData.accessToken ||
                      responseData.jwt ||
-                     responseData.auth_token;
+             responseData.auth_token ||
+             tokenContainer?.access ||
+             tokenContainer?.access_token ||
+             tokenContainer?.token;
                      
       const refresh = responseData.refresh || 
                       responseData.refresh_token || 
-                      responseData.refreshToken;
+              responseData.refreshToken ||
+              tokenContainer?.refresh ||
+              tokenContainer?.refresh_token;
                       
       const user = responseData.user || 
                    responseData.data || 
@@ -261,14 +286,9 @@ export const authAPI = {
           }
           return { access: responseData, refresh: null, user: { email: credentials.email } };
         }
-        
-        // Create fallback for non-standard responses
-        const fallbackToken = 'logged-in-' + Date.now();
-        setTokens(fallbackToken, null);
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify({ email: credentials.email, ...responseData }));
-        }
-        return { access: fallbackToken, refresh: null, user: { email: credentials.email, ...responseData } };
+
+        clearTokens();
+        throw new Error('Login failed: server did not return an access token.');
       }
       
       // Store tokens and user data
@@ -474,6 +494,68 @@ export const priceComparisonAPI = {
       friendlyError.canRetry = true;
       throw friendlyError;
 
+    }
+  },
+};
+
+const normalizeWishlistItems = (data) => {
+  if (Array.isArray(data)) {
+    return data;
+  }
+
+  if (Array.isArray(data?.results)) {
+    return data.results;
+  }
+
+  if (Array.isArray(data?.items)) {
+    return data.items;
+  }
+
+  if (Array.isArray(data?.wishlist)) {
+    return data.wishlist;
+  }
+
+  return [];
+};
+
+export const wishlistAPI = {
+  getWishlist: async () => {
+    try {
+      const response = await apiClient.get(API_ENDPOINTS.WISHLIST);
+      return normalizeWishlistItems(response.data);
+    } catch (error) {
+      if (error.response?.status === 401) {
+        throw new Error('Please login to view your wishlist.');
+      }
+      throw new Error('Failed to load wishlist. Please try again.');
+    }
+  },
+
+  addToWishlist: async (productId) => {
+    try {
+      const response = await apiClient.post(API_ENDPOINTS.WISHLIST_ADD, {
+        product_id: productId,
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        throw new Error('Please login to add products to wishlist.');
+      }
+      throw new Error('Failed to add product to wishlist. Please try again.');
+    }
+  },
+
+  removeFromWishlist: async (productId) => {
+    try {
+      const response = await apiClient.delete(API_ENDPOINTS.WISHLIST_REMOVE, {
+        data: { product_id: productId },
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        throw new Error('Please login to remove products from wishlist.');
+      }
+      throw new Error('Failed to remove product from wishlist. Please try again.');
     }
   },
 };

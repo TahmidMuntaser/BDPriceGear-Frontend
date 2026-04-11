@@ -32,4 +32,9 @@ export const API_ENDPOINTS = {
     AUTH_REFRESH: `${BASE_URL}/auth/refresh/`,
     AUTH_LOGOUT: `${BASE_URL}/auth/logout/`,
     AUTH_PROFILE: `${BASE_URL}/auth/profile/`,
+
+    // Wishlist endpoints (authenticated)
+    WISHLIST: `${BASE_URL}/wishlist/`,
+    WISHLIST_ADD: `${BASE_URL}/wishlist/add/`,
+    WISHLIST_REMOVE: `${BASE_URL}/wishlist/remove/`,
 };

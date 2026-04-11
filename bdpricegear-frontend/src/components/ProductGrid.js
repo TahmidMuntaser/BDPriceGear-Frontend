@@ -5,12 +5,18 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import ProductRecommendations from './ProductRecommendations';
 import { catalogAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { useWishlist } from '../hooks/useWishlist';
+import { Heart } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function ProductGrid({ products, showModal = false, enableRecommendations = false }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
   const [isRecommendationsLoading, setIsRecommendationsLoading] = useState(false);
   const [recommendationsError, setRecommendationsError] = useState('');
+  const { isLoggedIn, openLoginModal } = useAuth();
+  const { hasProduct, addItem, removeItem, isMutating: isWishlistMutating } = useWishlist({ enabled: isLoggedIn });
 
   const getModalStockStatus = (product) => {
     const rawPrice = product?.current_price ?? product?.price;
@@ -87,6 +93,33 @@ export default function ProductGrid({ products, showModal = false, enableRecomme
     setIsRecommendationsLoading(false);
   };
 
+  const handleWishlistToggle = async (e, productId, isWishlisted) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!productId) {
+      return;
+    }
+
+    if (!isLoggedIn) {
+      openLoginModal();
+      toast.error('Please login to manage wishlist.');
+      return;
+    }
+
+    try {
+      if (isWishlisted) {
+        await removeItem(productId);
+        toast.success('Removed from wishlist.');
+      } else {
+        await addItem(productId);
+        toast.success('Added to wishlist.');
+      }
+    } catch (error) {
+      toast.error(error.message || 'Wishlist update failed.');
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
 
@@ -136,6 +169,7 @@ export default function ProductGrid({ products, showModal = false, enableRecomme
     const productStore = product.shop_name || product.storeName;
     const productUrl = product.link || product.product_url || product.url;
     const productCategory = product.category_name || product.category;
+    const isWishlisted = productId ? hasProduct(productId) : false;
     
     const content = (
       <>
@@ -143,6 +177,22 @@ export default function ProductGrid({ products, showModal = false, enableRecomme
         <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 rounded-2xl blur-md opacity-0 group-hover/card:opacity-30 transition duration-500"></div>
         
         <div className="relative">
+          {productId && (
+            <button
+              type="button"
+              onClick={(e) => handleWishlistToggle(e, productId, isWishlisted)}
+              disabled={isWishlistMutating}
+              className={`absolute top-0 left-0 -mt-1 sm:-mt-2 -ml-1 sm:-ml-2 z-10 w-8 h-8 sm:w-9 sm:h-9 rounded-full border backdrop-blur-sm flex items-center justify-center transition-colors ${
+                isWishlisted
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 border-emerald-300/80 text-white shadow-lg shadow-emerald-500/40 hover:from-emerald-400 hover:to-teal-400'
+                  : 'bg-gray-900/70 border-emerald-500/30 text-emerald-200 hover:bg-emerald-500/20 hover:text-white hover:border-emerald-300/70 hover:shadow-lg hover:shadow-emerald-500/20'
+              } ${isWishlistMutating ? 'opacity-70 cursor-not-allowed' : ''}`}
+              aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+            >
+              <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${isWishlisted ? 'fill-white' : 'stroke-[2.5]'}`} />
+            </button>
+          )}
+
           {/* Store Badge */}
           {productStore && (
             <div className="absolute top-0 right-0 -mt-1 sm:-mt-2 -mr-1 sm:-mr-2 z-10">
@@ -277,13 +327,13 @@ export default function ProductGrid({ products, showModal = false, enableRecomme
                     <div className="absolute bottom-0 right-0 w-8 h-8 sm:w-16 sm:h-16 md:w-20 md:h-20 border-b-2 border-r-2 border-emerald-500/40 rounded-br-lg sm:rounded-br-xl"></div>
                     
                     {(selectedProduct.image_url || selectedProduct.img) && (
-                      <div className="relative z-10">
+                      <div className="relative z-10 flex items-center justify-center">
                         <Image
                           src={selectedProduct.image_url || selectedProduct.img}
                           alt={selectedProduct.name}
                           width={600}
                           height={600}
-                          className="w-full h-auto object-contain rounded-lg"
+                          className="w-full h-72 sm:h-80 md:h-96 object-contain rounded-lg"
                           unoptimized
                           onError={(e) => {
                             e.target.src = '/placeholder-product.png';
@@ -307,14 +357,30 @@ export default function ProductGrid({ products, showModal = false, enableRecomme
                       {selectedProduct.name}
                     </h2>
 
-                    {(selectedProduct.category_name || selectedProduct.category) && (
-                      <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2 py-1 sm:px-2.5 sm:py-1.5 bg-emerald-500/10 border border-emerald-500/30 rounded-md">
-                        <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                        </svg>
-                        <span className="text-sm font-medium text-emerald-300">{selectedProduct.category_name || selectedProduct.category}</span>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {(selectedProduct.category_name || selectedProduct.category) && (
+                        <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2 py-1 sm:px-2.5 sm:py-1.5 bg-emerald-500/10 border border-emerald-500/30 rounded-md">
+                          <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                          </svg>
+                          <span className="text-sm font-medium text-emerald-300">{selectedProduct.category_name || selectedProduct.category}</span>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={(e) => handleWishlistToggle(e, selectedProduct.id, hasProduct(selectedProduct.id))}
+                        disabled={isWishlistMutating}
+                        className={`inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-md border transition-all duration-200 ${
+                          hasProduct(selectedProduct.id)
+                            ? 'bg-gradient-to-r from-emerald-500 to-teal-500 border-emerald-300/80 text-white shadow-lg shadow-emerald-500/30 hover:from-emerald-400 hover:to-teal-400'
+                            : 'bg-gray-800/70 border-emerald-500/30 text-emerald-200 hover:bg-emerald-500/20 hover:text-white hover:border-emerald-300/70 hover:shadow-lg hover:shadow-emerald-500/20'
+                        } ${isWishlistMutating ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        aria-label={hasProduct(selectedProduct.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+                      >
+                        <Heart className={`w-4 h-4 ${hasProduct(selectedProduct.id) ? 'fill-white' : 'stroke-[2.5]'}`} />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Stats Grid */}

@@ -3,14 +3,25 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { catalogAPI } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
+import { useWishlist } from '@/hooks/useWishlist';
 import Link from 'next/link';
 import Image from 'next/image';
 import Breadcrumb from '@/components/Breadcrumb';
+import toast from 'react-hot-toast';
+import { Heart } from 'lucide-react';
 
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
   const productId = params.id;
+  const { isLoggedIn, openLoginModal } = useAuth();
+  const {
+    hasProduct,
+    addItem,
+    removeItem,
+    isMutating: isWishlistMutating,
+  } = useWishlist({ enabled: isLoggedIn });
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -89,6 +100,28 @@ export default function ProductDetailPage() {
       </div>
     );
   }
+
+  const isWishlisted = hasProduct(productId);
+
+  const handleToggleWishlist = async () => {
+    if (!isLoggedIn) {
+      openLoginModal();
+      toast.error('Please login to manage wishlist.');
+      return;
+    }
+
+    try {
+      if (isWishlisted) {
+        await removeItem(productId);
+        toast.success('Removed from wishlist.');
+      } else {
+        await addItem(productId);
+        toast.success('Added to wishlist.');
+      }
+    } catch (err) {
+      toast.error(err.message || 'Wishlist update failed.');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-gray-950 to-black pt-4 relative overflow-hidden">
@@ -238,6 +271,21 @@ export default function ProductDetailPage() {
                     </a>
                   </div>
                 )}
+
+                <div>
+                  <button
+                    onClick={handleToggleWishlist}
+                    disabled={isWishlistMutating}
+                    className={`w-full px-6 py-3 rounded-lg text-base font-medium transition-all duration-200 border flex items-center justify-center gap-2 ${
+                      isWishlisted
+                        ? 'bg-red-500/10 border-red-500/30 text-red-300 hover:bg-red-500/20'
+                        : 'bg-gray-800/60 border-gray-700/50 text-gray-200 hover:bg-gray-800 hover:border-emerald-500/40'
+                    } ${isWishlistMutating ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  >
+                    <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} />
+                    <span>{isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}</span>
+                  </button>
+                </div>
 
                 <div className="pt-6">
                   <button

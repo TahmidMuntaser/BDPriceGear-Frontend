@@ -13,13 +13,9 @@ export function useShops() {
     setError(null);
 
     try {
-      console.log('Fetching shops from API...');
       const data = await catalogAPI.getShops();
-      console.log('Shops API Response:', data);
       // Handle paginated response - extract results array
       const shopsArray = data.results || data;
-      console.log('Extracted shops array:', shopsArray);
-      console.log('Is Array?', Array.isArray(shopsArray));
       setShops(Array.isArray(shopsArray) ? shopsArray : []);
     } catch (err) {
       console.error('Shops fetch error:', err);

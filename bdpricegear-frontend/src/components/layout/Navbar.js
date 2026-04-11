@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import LoginModal from '../modals/LoginModal';
 import SignupModal from '../modals/SignupModal';
+import { useWishlist } from '../../hooks/useWishlist';
 import { 
   Search, 
   ShoppingCart, 
@@ -61,8 +62,8 @@ export default function Navbar() {
   }, [pathname]);
   
   const [cartCount] = useState(0);
-  const [wishlistCount] = useState(0);
   const [compareCount] = useState(2);
+  const { count: wishlistCount } = useWishlist({ enabled: isLoggedIn });
 
   // Handle logout
   const handleLogout = () => {

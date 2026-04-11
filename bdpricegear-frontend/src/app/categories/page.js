@@ -9,14 +9,6 @@ import Breadcrumb from '@/components/Breadcrumb';
 export default function CategoriesPage() {
   const { categories, loading, error, clearError } = useCategories();
 
-  // Debug logging
-  console.log('Categories Page Debug:', {
-    loading,
-    error,
-    categoriesLength: categories?.length,
-    categories: categories
-  });
-
   // PC Hardware category image mapping - same as home page
   const getCategoryImage = (categoryName, categorySlug) => {
     const searchStr = `${categoryName} ${categorySlug}`.toLowerCase();

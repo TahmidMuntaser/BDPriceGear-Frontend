@@ -37,12 +37,10 @@ export function useProducts(initialPage = 1, initialPageSize = 21, filters = {})
         // Fetch all needed backend pages
         const promises = [];
         for (let i = startBackendPage; i <= endBackendPage; i++) {
-          console.log(`Fetching backend page ${i} with filters:`, currentFilters);
           promises.push(
             catalogAPI.getProducts(i, backendPageSize, currentFilters).catch(err => {
               // Handle 404 for pages that don't exist (not enough products)
               if (err.message && err.message.includes('404')) {
-                console.log(`Page ${i} doesn't exist (not enough products)`);
                 return { results: [], count: 0 };
               }
               throw err;
@@ -51,7 +49,6 @@ export function useProducts(initialPage = 1, initialPageSize = 21, filters = {})
         }
         
         const results = await Promise.all(promises);
-        console.log(`Fetched ${results.length} backend pages, total products:`, results.reduce((sum, r) => sum + (r.results?.length || 0), 0));
         
         // Combine all results
         let allProducts = [];
@@ -105,7 +102,6 @@ export function useProducts(initialPage = 1, initialPageSize = 21, filters = {})
   };
 
   useEffect(() => {
-    console.log('Fetching products with:', { currentPage, pageSize, filters });
     fetchProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, pageSize, filters.category, filters.shop]);

@@ -13,13 +13,9 @@ export function useCategories() {
     setError(null);
 
     try {
-      console.log('Fetching categories from API...');
       const data = await catalogAPI.getCategories();
-      console.log('Categories API Response:', data);
       // Handle paginated response - extract results array
       const categoriesArray = data.results || data;
-      console.log('Extracted categories array:', categoriesArray);
-      console.log('Is Array?', Array.isArray(categoriesArray));
       setCategories(Array.isArray(categoriesArray) ? categoriesArray : []);
     } catch (err) {
       console.error('Categories fetch error:', err);
