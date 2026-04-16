@@ -8,6 +8,7 @@ import { useWishlist } from '@/hooks/useWishlist';
 import Link from 'next/link';
 import Image from 'next/image';
 import Breadcrumb from '@/components/Breadcrumb';
+import { getProductStockInfo } from '@/components/StockNotification';
 import toast from 'react-hot-toast';
 import { Heart } from 'lucide-react';
 
@@ -102,6 +103,7 @@ export default function ProductDetailPage() {
   }
 
   const isWishlisted = hasProduct(productId);
+  const stockInfo = getProductStockInfo(product);
 
   const handleToggleWishlist = async () => {
     if (!isLoggedIn) {
@@ -189,15 +191,13 @@ export default function ProductDetailPage() {
                         📁 {product.category_name}
                       </Link>
                     )}
-                    {product.stock_status && (
-                      <span className={`inline-block text-xs px-2.5 py-1 rounded-md ${
-                        product.stock_status === 'in_stock' 
-                          ? 'bg-green-600/20 text-green-300' 
-                          : 'bg-red-600/20 text-red-300'
-                      }`}>
-                        {product.stock_status === 'in_stock' ? '✅ In Stock' : '❌ Out of Stock'}
-                      </span>
-                    )}
+                    <span className={`inline-block text-xs px-2.5 py-1 rounded-md ${
+                      stockInfo.isInStock
+                        ? 'bg-green-600/20 text-green-300'
+                        : 'bg-red-600/20 text-red-300'
+                    }`}>
+                      {stockInfo.isInStock ? `✅ ${stockInfo.label}` : `❌ ${stockInfo.label}`}
+                    </span>
                   </div>
                 </div>
 

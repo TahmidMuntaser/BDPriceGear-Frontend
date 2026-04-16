@@ -37,4 +37,8 @@ export const API_ENDPOINTS = {
     WISHLIST: `${BASE_URL}/wishlist/`,
     WISHLIST_ADD: `${BASE_URL}/wishlist/add/`,
     WISHLIST_REMOVE: `${BASE_URL}/wishlist/remove/`,
+
+    // Stock notification endpoints (authenticated)
+    STOCK_NOTIFICATION_SUBSCRIBE: `${BASE_URL}/stock-notifications/subscribe/`,
+    STOCK_NOTIFICATION_UNSUBSCRIBE: `${BASE_URL}/stock-notifications/unsubscribe/`,
 };

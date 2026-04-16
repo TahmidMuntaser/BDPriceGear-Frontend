@@ -36,12 +36,14 @@ const TOKEN_PROTECTED_ENDPOINT_HINTS = [
   '/auth/logout',
   '/auth/refresh',
   '/wishlist/',
+  '/stock-notifications/',
 ];
 
 const REFRESHABLE_ENDPOINT_HINTS = [
   '/auth/profile',
   '/auth/logout',
   '/auth/refresh',
+  '/stock-notifications/',
 ];
 
 const hasProtectedTokenRequest = (url = '') => {
@@ -556,6 +558,62 @@ export const wishlistAPI = {
         throw new Error('Please login to remove products from wishlist.');
       }
       throw new Error('Failed to remove product from wishlist. Please try again.');
+    }
+  },
+};
+
+export const stockNotificationAPI = {
+  subscribe: async (productId) => {
+    try {
+      const response = await apiClient.post(API_ENDPOINTS.STOCK_NOTIFICATION_SUBSCRIBE, {
+        product_id: productId,
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        throw new Error('Please login to subscribe to stock notifications.');
+      }
+
+      const detail =
+        error.response?.data?.detail ||
+        error.response?.data?.message ||
+        (Array.isArray(error.response?.data?.non_field_errors)
+          ? error.response.data.non_field_errors.join('. ')
+          : null) ||
+        error.message;
+
+      const apiError = new Error(detail || 'Failed to subscribe to stock notifications. Please try again.');
+      apiError.status = error.response?.status;
+      apiError.payload = error.response?.data;
+      throw apiError;
+    }
+  },
+
+  unsubscribe: async (productId) => {
+    try {
+      const response = await apiClient.delete(API_ENDPOINTS.STOCK_NOTIFICATION_UNSUBSCRIBE, {
+        data: {
+          product_id: productId,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        throw new Error('Please login to manage stock notifications.');
+      }
+
+      const detail =
+        error.response?.data?.detail ||
+        error.response?.data?.message ||
+        (Array.isArray(error.response?.data?.non_field_errors)
+          ? error.response.data.non_field_errors.join('. ')
+          : null) ||
+        error.message;
+
+      const apiError = new Error(detail || 'Failed to unsubscribe from stock notifications. Please try again.');
+      apiError.status = error.response?.status;
+      apiError.payload = error.response?.data;
+      throw apiError;
     }
   },
 };

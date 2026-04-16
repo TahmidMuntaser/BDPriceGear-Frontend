@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import ProductRecommendations from './ProductRecommendations';
+import StockNotification from './StockNotification';
 import { catalogAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../hooks/useWishlist';
@@ -433,6 +434,10 @@ export default function ProductGrid({ products, showModal = false, enableRecomme
                         </div>
                       </div>
                     </div>
+
+                    {!modalStockStatus.inStock && (
+                      <StockNotification product={selectedProduct} className="border-white/15 bg-gradient-to-br from-slate-950/95 via-slate-900/90 to-slate-900/75 shadow-lg shadow-black/20" />
+                    )}
 
                     {/* Store Card */}
                     {(selectedProduct.shop_name || selectedProduct.storeName) && (
