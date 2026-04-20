@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import "./globals.css";
 import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
+import ChatbotWidget from "../components/ChatbotWidget";
 import { AuthProvider } from "../context/AuthContext";
 import { Toaster } from "react-hot-toast";
 
@@ -80,6 +81,7 @@ export default function RootLayout({ children }) {
             {children}
           </main>
           <Footer />
+          <ChatbotWidget />
         </AuthProvider>
       </body>
     </html>
