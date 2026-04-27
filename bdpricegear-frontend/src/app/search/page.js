@@ -247,7 +247,7 @@ function SearchResults() {
                   />
                 </div>
                 
-                <ProductGrid products={currentProducts} showModal={true} />
+                <ProductGrid products={currentProducts} showModal={true} enableStockNotifications={true} />
               </div>
             ) : !loading && isMounted && query ? (
               <div className="text-center py-12">

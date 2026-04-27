@@ -8,11 +8,9 @@ import { useAuth } from '../../context/AuthContext';
 import LoginModal from '../modals/LoginModal';
 import SignupModal from '../modals/SignupModal';
 import { useWishlist } from '../../hooks/useWishlist';
+import { useCategories } from '../../hooks/useCategories';
 import { 
-  Search, 
-  ShoppingCart, 
   Heart, 
-  BarChart3, 
   User, 
   Menu, 
   X,
@@ -46,6 +44,7 @@ export default function Navbar() {
     isMounted,
     isLoading,
   } = useAuth();
+  const { categories = [] } = useCategories();
   
   // Clear search term when navigating away from products page or when search query is cleared
   useEffect(() => {
@@ -61,8 +60,6 @@ export default function Navbar() {
     setIsMobileMenuOpen(false);
   }, [pathname]);
   
-  const [cartCount] = useState(0);
-  const [compareCount] = useState(2);
   const { count: wishlistCount } = useWishlist({ enabled: isLoggedIn });
 
   // Handle logout
@@ -88,20 +85,6 @@ export default function Navbar() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isProfileOpen]);
-
-  const categories = [
-    { name: 'SSD', href: '/categories/ssd' },
-    { name: 'HDD', href: '/categories/hdd' },
-    { name: 'Mouse', href: '/categories/mouse' },
-    { name: 'Keyboard', href: '/categories/keyboard' },
-    { name: 'Monitor', href: '/categories/monitor' },
-    { name: 'RAM', href: '/categories/ram' },
-    { name: 'Webcam', href: '/categories/webcam' },
-    { name: 'Speaker', href: '/categories/speaker' },
-    { name: 'Microphone', href: '/categories/microphone' },
-    { name: 'Laptop', href: '/categories/laptop' },
-    { name: 'Headphone', href: '/categories/headphone' },
-  ];
 
   return (
     <nav className="sticky top-0 z-50 bg-gray-900 border-b border-emerald-900/20 shadow-lg shadow-emerald-950/10">
@@ -137,18 +120,6 @@ export default function Navbar() {
               {/* Desktop Icons */}
               <div className="hidden md:flex items-center gap-4">
                 <Link 
-                  href="/compare" 
-                  className="relative p-2 hover:bg-gray-800/50 rounded-lg transition-all duration-200 group"
-                >
-                  <BarChart3 className="w-6 h-6 text-gray-400 group-hover:text-emerald-400 transition-colors" />
-                  {compareCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center shadow-lg shadow-emerald-500/50">
-                      {compareCount}
-                    </span>
-                  )}
-                </Link>
-
-                <Link 
                   href="/wishlist" 
                   className="relative p-2 hover:bg-gray-800/50 rounded-lg transition-all duration-200 group"
                 >
@@ -156,18 +127,6 @@ export default function Navbar() {
                   {wishlistCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center shadow-lg shadow-red-500/50">
                       {wishlistCount}
-                    </span>
-                  )}
-                </Link>
-
-                <Link 
-                  href="/cart" 
-                  className="relative p-2 hover:bg-gray-800/50 rounded-lg transition-all duration-200 group"
-                >
-                  <ShoppingCart className="w-6 h-6 text-gray-400 group-hover:text-teal-400 transition-colors" />
-                  {cartCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-gradient-to-r from-teal-500 to-emerald-500 text-white text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center shadow-lg shadow-teal-500/50">
-                      {cartCount}
                     </span>
                   )}
                 </Link>
@@ -280,10 +239,10 @@ export default function Navbar() {
                   onMouseLeave={() => setIsCategoriesOpen(false)}
                   className="absolute top-full left-0 mt-2 w-60 bg-gray-800/95 backdrop-blur-md border border-emerald-500/20 rounded-lg shadow-2xl shadow-emerald-950/50 z-50 overflow-hidden"
                 >
-                  {categories.map((category, index) => (
+                  {categories.map((category) => (
                     <Link
-                      key={index}
-                      href={category.href}
+                      key={category.id || category.slug}
+                      href={`/categories/${category.slug}`}
                       className="block px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-emerald-400 transition-all duration-200 first:pt-3 last:pb-3 border-l-2 border-transparent hover:border-emerald-500"
                     >
                       {category.name}
@@ -308,10 +267,10 @@ export default function Navbar() {
                 Shops
               </Link>
               
-              {categories.slice(0, 5).map((category, index) => (
+              {categories.slice(0, 5).map((category) => (
                 <Link
-                  key={index}
-                  href={category.href}
+                  key={category.id || category.slug}
+                  href={`/categories/${category.slug}`}
                   className="px-4 py-2.5 text-gray-400 hover:text-emerald-400 hover:bg-gray-800/50 rounded-lg transition-all duration-200 whitespace-nowrap"
                 >
                   {category.name}
@@ -329,22 +288,6 @@ export default function Navbar() {
             {/* Mobile Icons Row */}
             <div className="flex items-center justify-around pb-4 mb-4 border-b border-emerald-900/20">
               <Link 
-                href="/compare" 
-                className="flex flex-col items-center gap-1 group"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <div className="relative">
-                  <BarChart3 className="w-6 h-6 text-gray-400 group-hover:text-emerald-400 transition-colors" />
-                  {compareCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-semibold rounded-full w-4 h-4 flex items-center justify-center shadow-lg shadow-emerald-500/50">
-                      {compareCount}
-                    </span>
-                  )}
-                </div>
-                <span className="text-xs text-gray-400 group-hover:text-emerald-400 transition-colors">Compare</span>
-              </Link>
-
-              <Link 
                 href="/wishlist" 
                 className="flex flex-col items-center gap-1 group"
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -358,22 +301,6 @@ export default function Navbar() {
                   )}
                 </div>
                 <span className="text-xs text-gray-400 group-hover:text-red-400 transition-colors">Wishlist</span>
-              </Link>
-
-              <Link 
-                href="/cart" 
-                className="flex flex-col items-center gap-1 group"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <div className="relative">
-                  <ShoppingCart className="w-6 h-6 text-gray-400 group-hover:text-teal-400 transition-colors" />
-                  {cartCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-gradient-to-r from-teal-500 to-emerald-500 text-white text-xs font-semibold rounded-full w-4 h-4 flex items-center justify-center shadow-lg shadow-teal-500/50">
-                      {cartCount}
-                    </span>
-                  )}
-                </div>
-                <span className="text-xs text-gray-400 group-hover:text-teal-400 transition-colors">Cart</span>
               </Link>
 
               {/* Profile Dropdown Button for Mobile */}
@@ -461,10 +388,10 @@ export default function Navbar() {
               
               <div className="pt-2 mt-2 border-t border-emerald-900/20">
                 <div className="text-xs text-emerald-500/60 px-4 py-2 font-medium">Categories</div>
-                {categories.map((category, index) => (
+                {categories.map((category) => (
                   <Link
-                    key={index}
-                    href={category.href}
+                    key={category.id || category.slug}
+                    href={`/categories/${category.slug}`}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="block px-4 py-2 text-gray-400 hover:text-emerald-400 hover:bg-gray-800/50 rounded-lg transition-all duration-200 border-l-2 border-transparent hover:border-emerald-500"
                   >

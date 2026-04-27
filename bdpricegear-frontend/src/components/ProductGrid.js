@@ -11,13 +11,19 @@ import { useWishlist } from '../hooks/useWishlist';
 import { Heart } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-export default function ProductGrid({ products, showModal = false, enableRecommendations = false }) {
+export default function ProductGrid({ products, showModal = false, enableRecommendations = false, enableStockNotifications = false }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
   const [isRecommendationsLoading, setIsRecommendationsLoading] = useState(false);
   const [recommendationsError, setRecommendationsError] = useState('');
   const { isLoggedIn, openLoginModal } = useAuth();
   const { hasProduct, addItem, removeItem, isMutating: isWishlistMutating } = useWishlist({ enabled: isLoggedIn });
+
+  const formatDisplayPrice = (rawPrice) => {
+    const parsedPrice = typeof rawPrice === 'string' ? parseFloat(rawPrice) : Number(rawPrice);
+    const safePrice = Number.isFinite(parsedPrice) ? parsedPrice : 0;
+    return safePrice.toLocaleString('en-BD');
+  };
 
   const getModalStockStatus = (product) => {
     const rawPrice = product?.current_price ?? product?.price;
@@ -166,7 +172,7 @@ export default function ProductGrid({ products, showModal = false, enableRecomme
     const productId = product.id;
     const productName = product.name;
     const productImage = product.image_url || product.img;
-    const productPrice = product.current_price || product.price;
+    const productPrice = product.current_price ?? product.price;
     const productStore = product.shop_name || product.storeName;
     const productUrl = product.link || product.product_url || product.url;
     const productCategory = product.category_name || product.category;
@@ -231,7 +237,7 @@ export default function ProductGrid({ products, showModal = false, enableRecomme
           
           <div className="flex items-center justify-between mt-3 md:mt-4">
             <p className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300 bg-clip-text text-transparent drop-shadow-lg">
-              ৳{(typeof productPrice === 'string' ? parseFloat(productPrice) : productPrice)?.toLocaleString('en-BD') || 'N/A'}
+              ৳{formatDisplayPrice(productPrice)}
             </p>
           </div>
         </div>
@@ -399,9 +405,7 @@ export default function ProductGrid({ products, showModal = false, enableRecomme
                           </div>
                         </div>
                         <div className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
-                          ৳{(typeof (selectedProduct.current_price || selectedProduct.price) === 'string' 
-                            ? parseFloat(selectedProduct.current_price || selectedProduct.price) 
-                            : (selectedProduct.current_price || selectedProduct.price))?.toLocaleString('en-BD') || 'N/A'}
+                          ৳{formatDisplayPrice(selectedProduct.current_price ?? selectedProduct.price)}
                         </div>
                       </div>
                     </div>
@@ -435,7 +439,7 @@ export default function ProductGrid({ products, showModal = false, enableRecomme
                       </div>
                     </div>
 
-                    {!modalStockStatus.inStock && (
+                    {enableStockNotifications && !modalStockStatus.inStock && (
                       <StockNotification product={selectedProduct} className="border-white/15 bg-gradient-to-br from-slate-950/95 via-slate-900/90 to-slate-900/75 shadow-lg shadow-black/20" />
                     )}
 

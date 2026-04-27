@@ -797,7 +797,7 @@ function ProductsContent() {
                 )}
 
                 {/* Products Grid */}
-                <ProductGrid products={products} showModal={true} enableRecommendations={true} />
+                <ProductGrid products={products} showModal={true} enableRecommendations={true} enableStockNotifications={true} />
 
                 {/* Bottom Pagination */}
                 {totalPages > 0 && (
